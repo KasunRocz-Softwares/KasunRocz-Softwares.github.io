@@ -2,105 +2,167 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>KasunRocz Softwares</title>
-  <meta name="description" content="Free, open-source apps by KasunRocz Softwares: My moto (Android Auto on motorcycle dashes) and SyncSound (multi-speaker audio sync for Windows).">
-  <meta name="theme-color" content="#0b0f16">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>KasunRocz Softwares — Small apps that fix real annoyances</title>
+  <meta name="description" content="An independent, open-source software studio. Free apps for the hardware you already own — your bike's dash, the speakers around your room, your browser. No accounts, no ads, no cloud.">
+  <meta name="theme-color" content="#04050a">
   <meta property="og:title" content="KasunRocz Softwares">
-  <meta property="og:description" content="Free, open-source apps. No accounts, no ads, no cloud.">
+  <meta property="og:description" content="Small apps that fix real annoyances. Free, open source, no accounts.">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://kasunrocz-softwares.github.io/">
-  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <script>document.documentElement.classList.add('js')</script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;500;600&family=Manrope:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
+  <link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.min.js" crossorigin>
+  <script type="module" src="js/app.js"></script>
 </head>
 <body>
-  <header class="nav">
-    <div class="wrap nav-inner">
-      <a class="brand" href="./" aria-label="KasunRocz Softwares home">
-        <img src="favicon.svg" alt="" width="28" height="28">
-        <span>KasunRocz <b>Softwares</b></span>
+  <canvas id="universe" aria-hidden="true"></canvas>
+  <div class="vignette" aria-hidden="true"></div>
+  <div class="grain" aria-hidden="true"></div>
+  <div class="cursor-glow" aria-hidden="true"></div>
+  <div class="progress" aria-hidden="true"></div>
+
+  <div id="loader" aria-hidden="true">
+    <div class="loader-core">
+      <svg viewBox="0 0 120 120" class="loader-ring">
+        <circle cx="60" cy="60" r="54" />
+        <circle cx="60" cy="60" r="54" class="arc" />
+      </svg>
+      <span class="loader-pct" data-pct>000</span>
+    </div>
+    <p class="loader-label">Initializing universe</p>
+  </div>
+
+  <a class="skip" href="#main">Skip to content</a>
+
+  <header class="nav" id="nav">
+    <a class="brand" href="#top" aria-label="KasunRocz Softwares home">
+      <span class="brand-mark" aria-hidden="true"><i></i></span>
+      <span>KasunRocz<span class="brand-dim"> Softwares</span></span>
+    </a>
+    <nav class="nav-links" id="nav-links" aria-label="Primary">
+      <a href="#worlds" data-scramble>Projects</a>
+      <a href="#stack" data-scramble>Stack</a>
+      <a href="#principles" data-scramble>Principles</a>
+      <a href="#vision" data-scramble>Vision</a>
+    </nav>
+    <div class="nav-end">
+      <a class="btn btn-ghost btn-sm magnetic" href="https://github.com/KasunRocz-Softwares" target="_blank" rel="noopener">
+        <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/></svg>
+        GitHub
       </a>
-      <nav class="nav-links" aria-label="Main">
-        <a href="#projects">Projects</a>
-        <a href="#principles">How we build</a>
-        <a class="nav-gh" href="https://github.com/KasunRocz-Softwares" rel="noopener">GitHub</a>
-      </nav>
+      <button class="menu-btn" type="button" aria-expanded="false" aria-controls="nav-links" aria-label="Open menu"><span></span><span></span></button>
     </div>
   </header>
 
-  <main>
-    <section class="hero wrap">
-      <p class="eyebrow"><span class="dot"></span>Free &amp; open-source software</p>
-      <h1>Small apps that fix<br><span class="grad">real annoyances.</span></h1>
-      <p class="lede">Free tools for the things you already own: your bike's dash screen, the speakers around your room. No accounts, no ads, no cloud.</p>
-      <dl class="stats" aria-label="At a glance">
-        <div><dt id="stat-count">2</dt><dd>projects</dd></div>
-        <div><dt>100%</dt><dd>open source</dd></div>
-        <div><dt>0</dt><dd>sign-ups needed</dd></div>
+  <nav class="hud" aria-label="Sections" id="hud"></nav>
+  <div class="readout" aria-hidden="true">
+    <span data-readout-sector>SECTOR 00 · ORIGIN</span>
+    <span data-readout-coords>X 0.0 Y 0.0 Z 10.0</span>
+  </div>
+
+  <main id="main">
+    <!-- ORIGIN -->
+    <section class="hero" id="top" data-kf data-sector="Origin" data-accent="#3cf2c8">
+      <p class="eyebrow reveal"><span class="pulse-dot" aria-hidden="true"></span>Free &amp; open-source software studio</p>
+      <h1 class="display" data-split>Small apps that fix <em>real annoyances.</em></h1>
+      <p class="lede reveal" style="--d:.5s">Free tools for the things you already own: your bike's dash screen, the speakers around your room, the browser you work in. No accounts, no ads, no cloud.</p>
+      <div class="cta-row reveal" style="--d:.65s">
+        <a class="btn btn-primary magnetic" href="#worlds">Explore the universe <span aria-hidden="true">→</span></a>
+        <a class="btn btn-ghost magnetic" href="https://github.com/KasunRocz-Softwares" target="_blank" rel="noopener">Browse the source</a>
+      </div>
+      <dl class="stats reveal" style="--d:.8s">
+        <div><dt>Projects</dt><dd data-count="0" id="stat-count">0</dd></div>
+        <div><dt>Open source</dt><dd><span data-count="100">0</span>%</dd></div>
+        <div><dt>Sign-ups needed</dt><dd>0</dd></div>
       </dl>
+      <a class="scroll-cue" href="#worlds" aria-label="Scroll to projects"><span></span>Scroll to travel</a>
     </section>
 
-    <section id="projects" class="wrap projects" aria-labelledby="projects-h">
+    <!-- WORLDS INTRO -->
+    <section class="intro" id="worlds">
+      <p class="kicker reveal">// 01 — The worlds</p>
+      <h2 class="h2 reveal">One world per project.<br>One rule: <span class="grad">your hardware, your data.</span></h2>
+      <p class="intro-copy reveal">Each project is its own world, built around a device you already have. Keep scrolling to fly between them.</p>
+    </section>
+
+    <!-- PROJECT WORLDS: built from projects.json by js/app.js -->
+    <div id="worlds-list"></div>
+
+    <!-- ALSO FROM THE WORKSHOP: other org repos with GitHub Pages, found automatically -->
+    <section class="workshop" id="workshop" hidden>
+      <p class="kicker">// Also from the workshop</p>
+      <div class="workshop-list" id="workshop-list"></div>
+    </section>
+
+    <!-- CONSTELLATION -->
+    <section class="stack" id="stack" data-kf data-sector="Constellation" data-accent="#3cf2c8">
+      <div class="stack-copy">
+        <p class="kicker reveal">// 02 — Constellation</p>
+        <h2 class="h2 reveal">Everything our apps run on, in one orbit.</h2>
+        <p class="reveal">Platforms, connections and promises behind every release. Drag the sphere to spin it.</p>
+      </div>
+      <div class="sphere reveal" role="list" aria-label="Platforms and capabilities" id="sphere"></div>
+    </section>
+
+    <!-- PRINCIPLES -->
+    <section class="principles" id="principles" data-kf data-sector="Principles" data-accent="#b197fc">
       <div class="section-head">
-        <h2 id="projects-h">Projects</h2>
-        <div class="filters" role="group" aria-label="Filter by platform" id="filters"></div>
+        <p class="kicker reveal">// 03 — How we build</p>
+        <h2 class="h2 reveal">Three laws of this universe.</h2>
       </div>
-      <div class="grid" id="grid" aria-live="polite">
-        <noscript>
-          <ul class="noscript-list">
-            <li><a href="https://kasunrocz-softwares.github.io/MyMoto/">My moto: Android Auto on your bike's dash</a></li>
-            <li><a href="https://kasunrocz-softwares.github.io/SoundSync/">SyncSound: every speaker you own, in sync</a></li>
-          </ul>
-        </noscript>
-      </div>
-      <div id="more" class="more" hidden>
-        <h3>Also from the workshop</h3>
-        <div class="more-list" id="more-list"></div>
-      </div>
-    </section>
-
-    <section id="principles" class="wrap principles" aria-labelledby="pr-h">
-      <h2 id="pr-h">How we build</h2>
-      <div class="pr-grid">
-        <article>
-          <span class="pr-num">01</span>
+      <div class="cards">
+        <article class="card tilt reveal" style="--accent:var(--teal);--accent-rgb:60,242,200">
+          <span class="card-num">01</span>
           <h3>Your data stays yours</h3>
           <p>No account, no tracking, no cloud sync. If an app goes online, it says why, and you can switch it off.</p>
         </article>
-        <article>
-          <span class="pr-num">02</span>
+        <article class="card tilt reveal" style="--accent:var(--sky);--accent-rgb:92,200,255;--d:.1s">
+          <span class="card-num">02</span>
           <h3>Source on GitHub</h3>
           <p>Every project is open source under MIT or AGPL. Read it, build it, fork it, send a fix.</p>
         </article>
-        <article>
-          <span class="pr-num">03</span>
+        <article class="card tilt reveal" style="--accent:var(--violet);--accent-rgb:177,151,252;--d:.2s">
+          <span class="card-num">03</span>
           <h3>Made for real use</h3>
           <p>Glove-sized buttons on the bike, one-click calibration on the PC. Built for the hardware people actually have.</p>
         </article>
       </div>
     </section>
 
-    <section class="wrap cta">
-      <div class="cta-box">
-        <div>
-          <h2>Got an idea or found a bug?</h2>
-          <p>Open an issue on the project's GitHub page. Bug reports and feature requests are welcome.</p>
-        </div>
-        <a class="btn btn-primary" href="https://github.com/KasunRocz-Softwares" rel="noopener">Visit the GitHub org</a>
+    <!-- VISION -->
+    <section class="vision" id="vision" data-kf data-sector="Vision" data-accent="#3cf2c8">
+      <div class="vision-sticky">
+        <p class="kicker">// 04 — Vision</p>
+        <p class="vision-text" data-scrub>The future we're building is quiet. Software that lives on the hardware you already own, keeps your data where it belongs, and stays open for anyone to read, fork and fix.</p>
+        <ul class="vectors">
+          <li><span class="mono">Vector A</span>Local-first by default</li>
+          <li><span class="mono">Vector B</span>Smarter hardware you already have</li>
+          <li><span class="mono">Vector C</span>Open source, every release</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- CONTACT -->
+    <section class="contact" id="contact" data-kf data-sector="Contact" data-accent="#5cc8ff">
+      <p class="kicker reveal">// 05 — Transmission</p>
+      <h2 class="display contact-title reveal">Got an idea or <span class="grad">found a bug?</span></h2>
+      <p class="reveal">Open an issue on the project's GitHub page. Bug reports and feature requests are welcome.</p>
+      <div class="cta-row center reveal">
+        <a class="btn btn-primary btn-lg magnetic" href="https://github.com/KasunRocz-Softwares" target="_blank" rel="noopener">Visit the GitHub org <span aria-hidden="true">↗</span></a>
       </div>
     </section>
   </main>
+  <noscript><p class="noscript">This page needs JavaScript to list the projects. <a href="https://github.com/KasunRocz-Softwares">See them all on GitHub</a>.</p></noscript>
 
-  <footer class="wrap footer">
-    <span>© <span id="year">2026</span> KasunRocz Softwares</span>
-    <span class="foot-links">
-      <a href="https://github.com/KasunRocz-Softwares" rel="noopener">GitHub</a>
-    </span>
+  <footer class="footer">
+    <span>© <span data-year>2026</span> KasunRocz Softwares · Free &amp; open source</span>
+    <a href="#top">Back to origin ↑</a>
   </footer>
-
-  <script src="app.js" defer></script>
 </body>
 </html>

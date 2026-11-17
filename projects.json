@@ -1,11 +1,19 @@
 {
-  "_howto": "To add a project: copy one block below, change the values, commit. The homepage updates itself. 'repo' is the GitHub repo used for stars and latest version (owner/name). 'accent' is the card's glow colour.",
+  "_howto": "To add a project: copy one block below, change the values, commit. The homepage updates itself and adds a 3D planet for it. 'repo' is the GitHub repo used for stars and latest version (owner/name). 'accent' is the planet and panel colour. 'features' are short highlights. 'planet' picks the 3D model: ring, waves or crystal (optional).",
   "projects": [
     {
       "id": "MyMoto",
       "name": "My moto",
       "tagline": "Android Auto on your bike's dash.",
       "description": "Wireless Android Auto on MotoPlay / EasyConnect motorcycle dashes, plus tyre pressure, fuel range, rain alerts, ride reports and service reminders. No root, no PC.",
+      "features": [
+        "Wireless Android Auto",
+        "Tyre pressure",
+        "Fuel range",
+        "Rain alerts",
+        "Ride reports",
+        "Service reminders"
+      ],
       "website": "https://kasunrocz-softwares.github.io/MyMoto/",
       "repo": "KasunRoczDev/open-cfmoto",
       "download": "https://github.com/KasunRoczDev/open-cfmoto/releases/latest/download/OpenCfMoto.apk",
@@ -17,7 +25,8 @@
       ],
       "category": "Mobility",
       "license": "AGPL-3.0",
-      "accent": "#27c1d3",
+      "accent": "#ffb547",
+      "planet": "ring",
       "featured": true,
       "listings": []
     },
@@ -26,6 +35,14 @@
       "name": "SyncSound",
       "tagline": "Every speaker you own. One moment.",
       "description": "Play PC audio on wired, USB, HDMI, Bluetooth and Wi-Fi speakers at once, kept in sync by microphone calibration. Room correction, 7.1, 8D and per-app routing.",
+      "features": [
+        "Wired, USB, HDMI",
+        "Bluetooth, Wi-Fi",
+        "Mic calibration",
+        "Room correction",
+        "7.1 and 8D",
+        "Per-app routing"
+      ],
       "website": "https://kasunrocz-softwares.github.io/SoundSync/",
       "repo": "KasunRocz-Softwares/SoundSync",
       "download": "https://github.com/KasunRocz-Softwares/SoundSync/releases/latest",
@@ -37,7 +54,8 @@
       ],
       "category": "Audio",
       "license": "MIT",
-      "accent": "#2fc4ab",
+      "accent": "#5cc8ff",
+      "planet": "waves",
       "featured": true,
       "listings": [
         {
@@ -57,6 +75,13 @@
       "name": "Enterprise Personal Vault",
       "tagline": "Your vault starts with you.",
       "description": "A browser extension password vault: create a local encrypted vault with no account, then connect it to your organization for team sync and an admin console once its identity provider is set up.",
+      "features": [
+        "Local encrypted vault",
+        "No account to start",
+        "Team sync",
+        "Admin console",
+        "Identity provider"
+      ],
       "website": "https://kasunrocz-softwares.github.io/EPV-Site/",
       "platforms": [
         "Chrome",
@@ -64,7 +89,8 @@
         "Brave"
       ],
       "category": "Security",
-      "accent": "#7fd1a8",
+      "accent": "#b197fc",
+      "planet": "crystal",
       "listings": []
     }
   ]
