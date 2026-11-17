@@ -12,7 +12,9 @@
       "downloadLabel": "Download APK",
       "icon": "https://kasunrocz-softwares.github.io/MyMoto/img/mark.svg",
       "image": "https://kasunrocz-softwares.github.io/MyMoto/img/screens/28_tpms_dash_panel.png",
-      "platforms": ["Android"],
+      "platforms": [
+        "Android"
+      ],
       "category": "Mobility",
       "license": "AGPL-3.0",
       "accent": "#27c1d3",
@@ -30,7 +32,9 @@
       "downloadLabel": "Download for Windows",
       "icon": "https://kasunrocz-softwares.github.io/SoundSync/assets/icon.png",
       "image": "https://kasunrocz-softwares.github.io/SoundSync/assets/og.jpg",
-      "platforms": ["Windows"],
+      "platforms": [
+        "Windows"
+      ],
       "category": "Audio",
       "license": "MIT",
       "accent": "#2fc4ab",
@@ -47,6 +51,21 @@
           "badge": "https://kasunrocz-softwares.github.io/SoundSync/assets/alternativeto-badge.svg"
         }
       ]
+    },
+    {
+      "id": "EPV",
+      "name": "Enterprise Personal Vault",
+      "tagline": "Your vault starts with you.",
+      "description": "A browser extension password vault: create a local encrypted vault with no account, then connect it to your organization for team sync and an admin console once its identity provider is set up.",
+      "website": "https://kasunrocz-softwares.github.io/EPV-Help/",
+      "platforms": [
+        "Chrome",
+        "Edge",
+        "Brave"
+      ],
+      "category": "Security",
+      "accent": "#7fd1a8",
+      "listings": []
     }
   ]
 }
