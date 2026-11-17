@@ -16,7 +16,8 @@
       "category": "Mobility",
       "license": "AGPL-3.0",
       "accent": "#27c1d3",
-      "featured": true
+      "featured": true,
+      "listings": []
     },
     {
       "id": "SoundSync",
@@ -33,7 +34,19 @@
       "category": "Audio",
       "license": "MIT",
       "accent": "#2fc4ab",
-      "featured": true
+      "featured": true,
+      "listings": [
+        {
+          "site": "Product Hunt",
+          "url": "https://www.producthunt.com/products/syncsound?utm_source=badge-featured&utm_medium=badge&utm_campaign=badge-syncsound",
+          "badge": "https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1317745&theme=dark"
+        },
+        {
+          "site": "AlternativeTo",
+          "url": "https://alternativeto.net/software/syncsound/about/?utm_source=badge&utm_medium=referral",
+          "badge": "https://kasunrocz-softwares.github.io/SoundSync/assets/alternativeto-badge.svg"
+        }
+      ]
     }
   ]
 }

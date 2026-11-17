@@ -149,6 +149,20 @@ h2 { margin: 0; font-size: clamp(28px, 3.4vw, 40px); font-weight: 600; letter-sp
 .btn-primary:hover { border-color: transparent; filter: brightness(1.08); }
 .btn svg { width: 16px; height: 16px; }
 
+.listings {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 10px;
+  margin-top: 20px; padding-top: 18px; border-top: 1px solid var(--line);
+}
+.listings-label { font: 400 12px/1 var(--mono); color: var(--dim); text-transform: uppercase; letter-spacing: .06em; margin-right: 4px; }
+.listing { display: inline-flex; border-radius: 10px; transition: transform .15s, opacity .15s; }
+.listing:hover { transform: translateY(-2px); }
+.listing img { height: 40px; width: auto; display: block; }
+.listing.text {
+  align-items: center; min-height: 40px; padding: 0 14px; text-decoration: none;
+  font-size: 14px; font-weight: 500; color: var(--muted); border: 1px solid var(--line-2);
+}
+.listing.text:hover { color: var(--text); }
+
 .empty { grid-column: 1 / -1; color: var(--muted); padding: 40px 0; }
 
 .more { margin-top: 48px; }

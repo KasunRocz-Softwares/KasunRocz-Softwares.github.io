@@ -36,6 +36,27 @@
     return a;
   }
 
+  // "Listed on" row: Product Hunt, AlternativeTo, etc. Shows the site's badge if given, else a text link.
+  function listings(p) {
+    const list = (p.listings || []).filter(l => l && l.url);
+    if (!list.length) return null;
+    const row = el("div", { class: "listings" }, el("span", { class: "listings-label", text: "Listed on" }));
+    list.forEach(l => {
+      const name = l.site || "Listing";
+      const a = el("a", { class: "listing", href: l.url, rel: "noopener", target: "_blank", title: `${p.name} on ${name}` });
+      if (l.badge) {
+        const img = el("img", { src: l.badge, alt: `${p.name} on ${name}`, height: 40, loading: "lazy", decoding: "async" });
+        img.addEventListener("error", () => { img.remove(); a.classList.add("text"); a.textContent = name; });
+        a.append(img);
+      } else {
+        a.classList.add("text");
+        a.textContent = name;
+      }
+      row.append(a);
+    });
+    return row;
+  }
+
   function card(p, i) {
     const shot = el("a", { class: "shot" + (p.image ? "" : " noimg"), href: p.website || `https://github.com/${p.repo}`, "aria-label": `${p.name} website`, tabindex: "-1" });
     const version = el("span", { class: "version" });
@@ -69,7 +90,7 @@
       titleRow,
       p.tagline ? el("p", { class: "tagline", text: p.tagline }) : null,
       p.description ? el("p", { class: "desc", text: p.description }) : null,
-      meta, actions
+      meta, actions, listings(p)
     );
 
     const c = el("article", { class: "card", "data-platforms": (p.platforms || []).join("|") }, shot, body);
