@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>KasunRocz Softwares</title>
+  <meta name="description" content="Free, open-source apps by KasunRocz Softwares: My moto (Android Auto on motorcycle dashes) and SyncSound (multi-speaker audio sync for Windows).">
+  <meta name="theme-color" content="#0b0f16">
+  <meta property="og:title" content="KasunRocz Softwares">
+  <meta property="og:description" content="Free, open-source apps. No accounts, no ads, no cloud.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://kasunrocz-softwares.github.io/">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="nav">
+    <div class="wrap nav-inner">
+      <a class="brand" href="./" aria-label="KasunRocz Softwares home">
+        <img src="favicon.svg" alt="" width="28" height="28">
+        <span>KasunRocz <b>Softwares</b></span>
+      </a>
+      <nav class="nav-links" aria-label="Main">
+        <a href="#projects">Projects</a>
+        <a href="#principles">How we build</a>
+        <a class="nav-gh" href="https://github.com/KasunRocz-Softwares" rel="noopener">GitHub</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero wrap">
+      <p class="eyebrow"><span class="dot"></span>Free &amp; open-source software</p>
+      <h1>Small apps that fix<br><span class="grad">real annoyances.</span></h1>
+      <p class="lede">Free tools for the things you already own: your bike's dash screen, the speakers around your room. No accounts, no ads, no cloud.</p>
+      <dl class="stats" aria-label="At a glance">
+        <div><dt id="stat-count">2</dt><dd>projects</dd></div>
+        <div><dt>100%</dt><dd>open source</dd></div>
+        <div><dt>0</dt><dd>sign-ups needed</dd></div>
+      </dl>
+    </section>
+
+    <section id="projects" class="wrap projects" aria-labelledby="projects-h">
+      <div class="section-head">
+        <h2 id="projects-h">Projects</h2>
+        <div class="filters" role="group" aria-label="Filter by platform" id="filters"></div>
+      </div>
+      <div class="grid" id="grid" aria-live="polite">
+        <noscript>
+          <ul class="noscript-list">
+            <li><a href="https://kasunrocz-softwares.github.io/MyMoto/">My moto: Android Auto on your bike's dash</a></li>
+            <li><a href="https://kasunrocz-softwares.github.io/SoundSync/">SyncSound: every speaker you own, in sync</a></li>
+          </ul>
+        </noscript>
+      </div>
+      <div id="more" class="more" hidden>
+        <h3>Also from the workshop</h3>
+        <div class="more-list" id="more-list"></div>
+      </div>
+    </section>
+
+    <section id="principles" class="wrap principles" aria-labelledby="pr-h">
+      <h2 id="pr-h">How we build</h2>
+      <div class="pr-grid">
+        <article>
+          <span class="pr-num">01</span>
+          <h3>Your data stays yours</h3>
+          <p>No account, no tracking, no cloud sync. If an app goes online, it says why, and you can switch it off.</p>
+        </article>
+        <article>
+          <span class="pr-num">02</span>
+          <h3>Source on GitHub</h3>
+          <p>Every project is open source under MIT or AGPL. Read it, build it, fork it, send a fix.</p>
+        </article>
+        <article>
+          <span class="pr-num">03</span>
+          <h3>Made for real use</h3>
+          <p>Glove-sized buttons on the bike, one-click calibration on the PC. Built for the hardware people actually have.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="wrap cta">
+      <div class="cta-box">
+        <div>
+          <h2>Got an idea or found a bug?</h2>
+          <p>Open an issue on the project's GitHub page. Bug reports and feature requests are welcome.</p>
+        </div>
+        <a class="btn btn-primary" href="https://github.com/KasunRocz-Softwares" rel="noopener">Visit the GitHub org</a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="wrap footer">
+    <span>© <span id="year">2026</span> KasunRocz Softwares</span>
+    <span class="foot-links">
+      <a href="https://github.com/KasunRocz-Softwares" rel="noopener">GitHub</a>
+    </span>
+  </footer>
+
+  <script src="app.js" defer></script>
+</body>
+</html>

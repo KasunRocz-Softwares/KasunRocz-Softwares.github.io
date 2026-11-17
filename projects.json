@@ -1,0 +1,39 @@
+{
+  "_howto": "To add a project: copy one block below, change the values, commit. The homepage updates itself. 'repo' is the GitHub repo used for stars and latest version (owner/name). 'accent' is the card's glow colour.",
+  "projects": [
+    {
+      "id": "MyMoto",
+      "name": "My moto",
+      "tagline": "Android Auto on your bike's dash.",
+      "description": "Wireless Android Auto on MotoPlay / EasyConnect motorcycle dashes, plus tyre pressure, fuel range, rain alerts, ride reports and service reminders. No root, no PC.",
+      "website": "https://kasunrocz-softwares.github.io/MyMoto/",
+      "repo": "KasunRoczDev/open-cfmoto",
+      "download": "https://github.com/KasunRoczDev/open-cfmoto/releases/latest/download/OpenCfMoto.apk",
+      "downloadLabel": "Download APK",
+      "icon": "https://kasunrocz-softwares.github.io/MyMoto/img/mark.svg",
+      "image": "https://kasunrocz-softwares.github.io/MyMoto/img/screens/28_tpms_dash_panel.png",
+      "platforms": ["Android"],
+      "category": "Mobility",
+      "license": "AGPL-3.0",
+      "accent": "#27c1d3",
+      "featured": true
+    },
+    {
+      "id": "SoundSync",
+      "name": "SyncSound",
+      "tagline": "Every speaker you own. One moment.",
+      "description": "Play PC audio on wired, USB, HDMI, Bluetooth and Wi-Fi speakers at once, kept in sync by microphone calibration. Room correction, 7.1, 8D and per-app routing.",
+      "website": "https://kasunrocz-softwares.github.io/SoundSync/",
+      "repo": "KasunRocz-Softwares/SoundSync",
+      "download": "https://github.com/KasunRocz-Softwares/SoundSync/releases/latest",
+      "downloadLabel": "Download for Windows",
+      "icon": "https://kasunrocz-softwares.github.io/SoundSync/assets/icon.png",
+      "image": "https://kasunrocz-softwares.github.io/SoundSync/assets/og.jpg",
+      "platforms": ["Windows"],
+      "category": "Audio",
+      "license": "MIT",
+      "accent": "#2fc4ab",
+      "featured": true
+    }
+  ]
+}
