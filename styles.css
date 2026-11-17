@@ -17,6 +17,8 @@
 }
 
 * { box-sizing: border-box; }
+/* Elements with their own display (cards use flex) would otherwise ignore the hidden attribute. */
+[hidden] { display: none !important; }
 html { scroll-behavior: smooth; }
 body {
   margin: 0;
