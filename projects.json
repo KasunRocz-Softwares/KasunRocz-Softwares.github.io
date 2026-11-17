@@ -53,11 +53,11 @@
       ]
     },
     {
-      "id": "EPV-Help",
+      "id": "EPV-Site",
       "name": "Enterprise Personal Vault",
       "tagline": "Your vault starts with you.",
       "description": "A browser extension password vault: create a local encrypted vault with no account, then connect it to your organization for team sync and an admin console once its identity provider is set up.",
-      "website": "https://kasunrocz-softwares.github.io/EPV-Help/",
+      "website": "https://kasunrocz-softwares.github.io/EPV-Site/",
       "platforms": [
         "Chrome",
         "Edge",
