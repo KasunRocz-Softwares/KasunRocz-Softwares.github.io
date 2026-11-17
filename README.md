@@ -22,6 +22,8 @@ Edit **`projects.json`** only. Copy one of the blocks, change the values, and co
   "category": "Tools",
   "license": "MIT",
   "accent": "#8b7cf6",
+  "planet": "crystal",
+  "features": ["Short highlight", "Another one"],
   "listings": [
     { "site": "Product Hunt", "url": "https://www.producthunt.com/products/mynewapp", "badge": "https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=XXXX&theme=dark" },
     { "site": "AlternativeTo", "url": "https://alternativeto.net/software/mynewapp/about/" }
@@ -29,7 +31,13 @@ Edit **`projects.json`** only. Copy one of the blocks, change the values, and co
 }
 ```
 
-Every field except `name` is optional. Leave out `image` and the card shows the first letter instead.
+Every field except `name` is optional. Leave out `icon` and the panel shows the first letter instead.
+
+Each project becomes its own 3D "world" on the homepage: a planet you fly to while scrolling, plus a glass panel with its details.
+
+- `accent` is the planet's and panel's colour.
+- `planet` picks the 3D model: `ring`, `waves` or `crystal`. Leave it out and the models take turns.
+- `features` is a short list of highlights shown on the panel. They also appear in the spinning "Constellation" sphere, together with each project's platforms and licence.
 
 `listings` adds a "Listed on" row to the card. Use it for Product Hunt, AlternativeTo, or any other directory.
 `badge` is the badge image the site gives you. Leave it out and a plain text button with the site's name is shown instead.
@@ -45,10 +53,13 @@ shows up under "Also from the workshop", using the repo's description.
 |---|---|
 | `index.html` | The page |
 | `styles.css` | All styling |
-| `app.js` | Reads `projects.json` and draws the cards |
+| `js/app.js` | Reads `projects.json`, builds the project worlds, and runs the scroll, cursor and click effects |
+| `js/scene.js` | The 3D universe (Three.js, loaded from jsDelivr): stars, the studio core, one planet per project, the galaxy |
 | `projects.json` | The project list |
 | `favicon.svg` | Org logo / tab icon |
 | `.nojekyll` | Tells GitHub Pages to serve files as-is |
+
+If WebGL isn't available, the page still works with a plain gradient background. Visitors who turn on "reduce motion" get calmer animation.
 
 ## Run locally
 
