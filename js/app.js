@@ -7,7 +7,6 @@ const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
 const smooth = (a, b, x) => { const t = clamp((x - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); };
 const GLYPHS = '!<>-_\\/[]{}=+*^?#01ABCDEFXZ';
 const FALLBACK_ACCENTS = ['#ffb547', '#5cc8ff', '#b197fc', '#ff7eb6', '#7ef29d'];
-const STUDIO_PROMISES = ['Local-first', 'Zero tracking', 'No accounts', 'Open source'];
 
 /* ---------------- Motion preference (OS setting, overridable with the Motion toggle) ---------------- */
 let reduce = root.classList.contains('rm');
@@ -290,7 +289,8 @@ function buildGraph(projects, accents) {
   // Most general first, so small screens (which show fewer nodes) keep the platforms and promises.
   projects.forEach((p, pi) => (p.platforms || []).forEach((t) => add(t, pi)));
   projects.forEach((p, pi) => { if (p.license) add(p.license, pi); });
-  STUDIO_PROMISES.forEach((t) => projects.forEach((_, pi) => add(t, pi)));
+  // Promises come from each project's own data, so they're only linked where they're true.
+  projects.forEach((p, pi) => { (p.promises || []).forEach((t) => add(t, pi)); if (p.license) add('Open source', pi); });
   projects.forEach((p, pi) => (p.features || []).forEach((t) => add(t, pi)));
   return {
     hubs: projects.map((p, i) => ({ name: p.name, tagline: p.tagline, accent: accents[i], rgb: hexToRgb(accents[i]) })),

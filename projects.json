@@ -1,5 +1,5 @@
 {
-  "_howto": "To add a project: copy one block below, change the values, commit. The homepage updates itself and adds a 3D planet for it. 'repo' is the GitHub repo used for stars and latest version (owner/name). 'accent' is the planet and panel colour. 'features' are short highlights. 'planet' picks the 3D model: ring, waves, crystal or radar (optional).",
+  "_howto": "To add a project: copy one block below, change the values, commit. The homepage updates itself and adds a 3D planet for it. 'repo' is the GitHub repo used for stars and latest version (owner/name). 'accent' is the planet and panel colour. 'features' are short highlights. 'planet' picks the 3D model: ring, waves, crystal, radar or graph (optional). 'promises' are short commitments (like 'No accounts') linked to the project in the constellation; 'Open source' is added automatically when 'license' is set.",
   "projects": [
     {
       "id": "MyMoto",
@@ -13,6 +13,10 @@
         "Rain alerts",
         "Ride reports",
         "Service reminders"
+      ],
+      "promises": [
+        "No accounts",
+        "Local-first"
       ],
       "website": "https://kasunrocz-softwares.github.io/MyMoto/",
       "repo": "KasunRoczDev/open-cfmoto",
@@ -42,6 +46,10 @@
         "Room correction",
         "7.1 and 8D",
         "Per-app routing"
+      ],
+      "promises": [
+        "No accounts",
+        "Local-first"
       ],
       "website": "https://kasunrocz-softwares.github.io/SoundSync/",
       "repo": "KasunRocz-Softwares/SoundSync",
@@ -82,6 +90,9 @@
         "Admin console",
         "Identity provider"
       ],
+      "promises": [
+        "Local-first"
+      ],
       "website": "https://kasunrocz-softwares.github.io/EPV-Site/",
       "platforms": [
         "Chrome",
@@ -106,6 +117,9 @@
         "Cloud cost tracking",
         "Role-based access"
       ],
+      "promises": [
+        "Self-hosted"
+      ],
       "website": "https://kasunrocz-softwares.github.io/cs-tool/",
       "repo": "KasunRocz-Softwares/cs-tool",
       "icon": "https://kasunrocz-softwares.github.io/cs-tool/icon.svg",
@@ -119,6 +133,33 @@
       "license": "MIT",
       "accent": "#ff6f61",
       "planet": "radar",
+      "listings": []
+    },
+    {
+      "id": "QA-TestFlow-Site",
+      "name": "QA TestFlow",
+      "tagline": "Test what changed. Know what it breaks.",
+      "description": "Dependency-aware QA test management. Map how features depend on each other, see exactly what a change affects, and run the retest live with your whole team, through to a signed-off release.",
+      "features": [
+        "Dependency map",
+        "Live team test runs",
+        "Release sign-offs",
+        "QA assistant",
+        "Coverage gaps",
+        "ClickUp integration"
+      ],
+      "promises": [
+        "Self-hosted"
+      ],
+      "website": "https://kasunrocz-softwares.github.io/QA-TestFlow-Site/",
+      "icon": "https://kasunrocz-softwares.github.io/QA-TestFlow-Site/icon.svg",
+      "image": "https://kasunrocz-softwares.github.io/QA-TestFlow-Site/og.png",
+      "platforms": [
+        "Web"
+      ],
+      "category": "Quality",
+      "accent": "#7ef29d",
+      "planet": "graph",
       "listings": []
     }
   ]

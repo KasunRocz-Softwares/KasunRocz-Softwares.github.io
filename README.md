@@ -36,8 +36,10 @@ Every field except `name` is optional. Leave out `icon` and the panel shows the 
 Each project becomes its own 3D "world" on the homepage: a planet you fly to while scrolling, plus a glass panel with its details.
 
 - `accent` is the planet's and panel's colour.
-- `planet` picks the 3D model: `ring`, `waves`, `crystal` or `radar`. Leave it out and the models take turns.
+- `planet` picks the 3D model: `ring`, `waves`, `crystal`, `radar` or `graph`. Leave it out and the models take turns.
 - `features` is a short list of highlights shown on the panel. They also appear in the spinning "Constellation" sphere, together with each project's platforms and licence.
+- `promises` (optional) are short commitments such as `No accounts` or `Self-hosted`, linked to the project in the constellation. `Open source` is linked automatically when `license` is set.
+- Leave out `repo` for a project whose source is private: the panel then shows no Source button, version or stars.
 
 `listings` adds a "Listed on" row to the card. Use it for Product Hunt, AlternativeTo, or any other directory.
 `badge` is the badge image the site gives you. Leave it out and a plain text button with the site's name is shown instead.

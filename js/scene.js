@@ -476,7 +476,62 @@ export function createUniverse(canvas, { mobile = false, reduce = false, worlds 
     };
   }
 
-  const BUILDERS = { ring: ringPlanet, waves: wavePlanet, crystal: crystalPlanet, radar: radarPlanet };
+  // Quality: a dependency graph. Nodes coloured by test status; pulses run along edges.
+  function graphPlanet(color) {
+    const g = new THREE.Group();
+    g.add(new THREE.Mesh(new THREE.IcosahedronGeometry(1.2, Math.round(Q.detail * .6)), orbMat(color, deepOf(color), .04)));
+    g.add(glow(color, 8, .4));
+    const net = new THREE.Group();
+    g.add(net);
+    const shellGeo = new THREE.IcosahedronGeometry(3, 1);
+    net.add(new THREE.LineSegments(new THREE.EdgesGeometry(shellGeo), lineMat(color, .3)));
+    const pos = shellGeo.getAttribute('position');
+    const verts = [];
+    for (let i = 0; i < pos.count; i++) {
+      const v = V(pos.getX(i), pos.getY(i), pos.getZ(i));
+      if (!verts.some((u) => u.distanceTo(v) < .01)) verts.push(v);
+    }
+    const statusCols = [color, color, color, 0xffb547, 0xff5d6c];
+    const alarms = [];
+    verts.forEach((v, i) => {
+      const c = statusCols[i % statusCols.length];
+      const m = new THREE.Mesh(new THREE.SphereGeometry(.09, 10, 10), new THREE.MeshBasicMaterial({ color: c }));
+      m.position.copy(v);
+      const gl = glow(c, .7, .8);
+      gl.position.copy(v);
+      net.add(m, gl);
+      if (c === 0xff5d6c) alarms.push(gl);
+    });
+    const pairs = [];
+    for (let i = 0; i < verts.length; i++) {
+      for (let j = i + 1; j < verts.length; j++) if (verts[i].distanceTo(verts[j]) < 2.2) pairs.push([verts[i], verts[j]]);
+    }
+    const pulses = Array.from({ length: Math.max(6, Math.round(16 * Q.env)) }, () => {
+      const sp = glow(lighter(color, .55), .45, .95);
+      net.add(sp);
+      return { sp, pair: pairs[(Math.random() * pairs.length) | 0], u: Math.random(), speed: .35 + Math.random() * .4 };
+    });
+    g.add(nebula(color));
+    let last = 0;
+    return {
+      group: g,
+      update(e) {
+        const dt = Math.min(.05, Math.max(0, e - last));
+        last = e;
+        net.rotation.y = e * .08;
+        net.rotation.x = Math.sin(e * .2) * .1;
+        pulses.forEach((p) => {
+          p.u += dt * p.speed;
+          if (p.u >= 1) { p.u = 0; p.pair = pairs[(Math.random() * pairs.length) | 0]; }
+          p.sp.position.lerpVectors(p.pair[0], p.pair[1], p.u);
+          p.sp.material.opacity = Math.sin(p.u * Math.PI) * .95;
+        });
+        alarms.forEach((gl) => { gl.material.opacity = .45 + .45 * Math.sin(e * 5); });
+      },
+    };
+  }
+
+  const BUILDERS = { ring: ringPlanet, waves: wavePlanet, crystal: crystalPlanet, radar: radarPlanet, graph: graphPlanet };
   const KINDS = Object.keys(BUILDERS);
   const worldColors = [];
   const planets = worlds.map((w, i) => {
