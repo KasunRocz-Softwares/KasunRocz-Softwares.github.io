@@ -536,6 +536,7 @@ export function createUniverse(canvas, { mobile = false, reduce = false, worlds 
   let introT = reduce ? 1 : 0;
   let introDur = 3.6;
   let introPlaying = false;
+  let introStart = 0;
   let ignited = reduce;
 
   /* ---- Loop ---- */
@@ -563,7 +564,8 @@ export function createUniverse(canvas, { mobile = false, reduce = false, worlds 
 
     // intro timeline
     if (introPlaying) {
-      introT = Math.min(1, introT + dt / introDur);
+      // wall-clock time, so a slow device stays in step with the page's own intro timers
+      introT = Math.min(1, (performance.now() - introStart) / 1000 / introDur);
       if (introT >= 1) introPlaying = false;
     }
     const it = introT;
@@ -648,6 +650,7 @@ export function createUniverse(canvas, { mobile = false, reduce = false, worlds 
       if (reduce) { introT = 1; return 0; }
       introDur = fast ? 1.8 : 3.6;
       introT = 0;
+      introStart = performance.now();
       ignited = false;
       introPlaying = true;
       return introDur;
