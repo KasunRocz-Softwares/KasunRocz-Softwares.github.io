@@ -1,12 +1,21 @@
-// KasunRocz universe — Three.js scene driven by scroll keyframes.
+// KasunRocz universe — Three.js scene.
+// One studio core, one planet + environment per project (from projects.json), a galaxy,
+// a cinematic intro, and a camera that travels a continuous spline as you scroll.
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.min.js';
 
 const COLORS = {
   teal: 0x3cf2c8,
-  amber: 0xffb547,
   sky: 0x5cc8ff,
   violet: 0xb197fc,
   deep: 0x0b1030,
+  bg: 0x04050a,
+};
+
+// Rendering budgets per device class. app.js picks the tier.
+const TIERS = {
+  high: { pr: 1.75, stars: 3600, galaxy: 7500, env: 1, detail: 40, aa: true, nebula: 4 },
+  medium: { pr: 1.5, stars: 2200, galaxy: 4200, env: .6, detail: 24, aa: false, nebula: 3 },
+  low: { pr: 1, stars: 1200, galaxy: 2200, env: .35, detail: 14, aa: false, nebula: 2 },
 };
 
 /* ---------------- Shaders ---------------- */
@@ -37,17 +46,19 @@ const ORB_F = /* glsl */`
     gl_FragColor = vec4(col, 1.);
   }`;
 
+// Stars + galaxy. uReveal makes stars bloom in one by one during the intro.
 const PTS_V = /* glsl */`
   attribute float aSize; attribute float aSeed; attribute vec3 aColor;
-  uniform float uTime; uniform float uPR; uniform float uPulse;
+  uniform float uTime; uniform float uPR; uniform float uPulse; uniform float uReveal; uniform float uSpeed;
   varying vec3 vC; varying float vA;
   void main(){
     vec4 mv = modelViewMatrix * vec4(position, 1.);
     gl_Position = projectionMatrix * mv;
     float d = -mv.z;
-    gl_PointSize = clamp(aSize * uPR * (70. / max(d, .1)), 0., 42.);
+    gl_PointSize = clamp(aSize * (1. + uSpeed * .7) * uPR * (70. / max(d, .1)), 0., 42.);
     float tw = .55 + .45 * sin(uTime * (.8 + aSeed * 2.) + aSeed * 40.);
-    vA = tw * smoothstep(170., 30., d) * smoothstep(.4, 3., d) * (1. + uPulse * .9);
+    float rev = smoothstep(aSeed, aSeed + .08, uReveal * 1.1);
+    vA = tw * rev * smoothstep(170., 30., d) * smoothstep(.4, 3., d) * (1. + uPulse * .9 + uSpeed * .5);
     vC = aColor;
   }`;
 const PTS_F = /* glsl */`
@@ -56,6 +67,25 @@ const PTS_F = /* glsl */`
     float d = length(gl_PointCoord - .5);
     float a = smoothstep(.5, 0., d); a *= a;
     gl_FragColor = vec4(vC, a * vA);
+  }`;
+
+// Planet environments: particles that orbit (uSpin) and breathe (uAmp) around a world.
+const ENV_V = /* glsl */`
+  attribute float aSize; attribute float aSeed; attribute vec3 aColor;
+  uniform float uTime; uniform float uPR; uniform float uAmp; uniform float uSpin; uniform float uReveal;
+  varying vec3 vC; varying float vA;
+  void main(){
+    vec3 p = position;
+    float ang = uTime * uSpin * (.6 + aSeed * .8);
+    float c = cos(ang), s = sin(ang);
+    p.xz = mat2(c, -s, s, c) * p.xz;
+    p *= 1. + uAmp * sin(uTime * 2.6 + aSeed * 12.);
+    vec4 mv = modelViewMatrix * vec4(p, 1.);
+    gl_Position = projectionMatrix * mv;
+    float d = -mv.z;
+    gl_PointSize = clamp(aSize * uPR * (60. / max(d, .1)), 0., 36.);
+    vA = (.55 + .45 * sin(uTime * 1.7 + aSeed * 30.)) * smoothstep(90., 10., d) * uReveal;
+    vC = aColor;
   }`;
 
 const RING_V = /* glsl */`
@@ -78,17 +108,19 @@ const LANE_V = /* glsl */`
   attribute float aT; varying float vT;
   void main(){ vT = aT; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.); }`;
 const LANE_F = /* glsl */`
-  uniform float uTime; uniform vec3 uColor; varying float vT;
+  uniform float uTime; uniform vec3 uColor; uniform float uReveal; uniform float uSpeed; varying float vT;
   void main(){
-    float d = fract(vT * 70. - uTime * .55);
+    float d = fract(vT * 70. - uTime * (.55 + uSpeed * 2.));
     float a = smoothstep(0., .08, d) * smoothstep(.55, .08, d);
-    gl_FragColor = vec4(uColor, .05 + a * .55);
+    gl_FragColor = vec4(uColor, (.05 + a * (.55 + uSpeed * .4)) * uReveal);
   }`;
 
 /* ---------------- Helpers ---------------- */
 const V = (x, y, z) => new THREE.Vector3(x, y, z);
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
 const smooth = (a, b, x) => { const t = clamp((x - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); };
+const easeInOutCubic = (t) => (t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
+const easeOutBack = (t) => { const c1 = 1.70158, c3 = c1 + 1; return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2); };
 
 function makeGlowTexture() {
   const c = document.createElement('canvas');
@@ -107,21 +139,25 @@ function makeGlowTexture() {
 }
 
 /* ---------------- Universe ---------------- */
-export function createUniverse(canvas, { mobile = false, reduce = false, worlds = [] } = {}) {
-  const renderer = new THREE.WebGLRenderer({ canvas, antialias: !mobile, powerPreference: 'high-performance' });
-  let prCap = mobile ? 1.5 : 1.75;
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, prCap));
-  renderer.setClearColor(0x04050a, 1);
+export function createUniverse(canvas, { mobile = false, reduce = false, worlds = [], tier = 'high' } = {}) {
+  const Q = TIERS[tier] || TIERS.high;
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: Q.aa, powerPreference: 'high-performance' });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, Q.pr));
+  renderer.setClearColor(COLORS.bg, 1);
 
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(mobile ? 64 : 52, 1, .1, 420);
 
-  const shared = { uTime: { value: 0 }, uPulse: { value: 0 }, uPR: { value: renderer.getPixelRatio() } };
+  const shared = {
+    uTime: { value: 0 },
+    uPulse: { value: 0 },
+    uPR: { value: renderer.getPixelRatio() },
+    uReveal: { value: reduce ? 1 : 0 },
+    uSpeed: { value: 0 },
+  };
   const GLOW = makeGlowTexture();
   const glow = (color, size, opacity = .55) => {
-    const s = new THREE.Sprite(new THREE.SpriteMaterial({
-      map: GLOW, color, transparent: true, opacity, blending: THREE.AdditiveBlending, depthWrite: false,
-    }));
+    const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: GLOW, color, transparent: true, opacity, blending: THREE.AdditiveBlending, depthWrite: false }));
     s.scale.setScalar(size);
     return s;
   };
@@ -135,11 +171,46 @@ export function createUniverse(canvas, { mobile = false, reduce = false, worlds 
     for (let i = 0; i <= seg; i++) { const a = i / seg * Math.PI * 2; pts.push(V(Math.cos(a) * r, 0, Math.sin(a) * r)); }
     return new THREE.BufferGeometry().setFromPoints(pts);
   };
+  const pointsGeo = (n, fill) => {
+    const pos = new Float32Array(n * 3), col = new Float32Array(n * 3), size = new Float32Array(n), seed = new Float32Array(n);
+    const c = new THREE.Color();
+    const out = { x: 0, y: 0, z: 0, color: c, size: 1 };
+    for (let i = 0; i < n; i++) {
+      fill(i, out);
+      pos.set([out.x, out.y, out.z], i * 3);
+      col.set([c.r, c.g, c.b], i * 3);
+      size[i] = out.size;
+      seed[i] = Math.random();
+    }
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+    geo.setAttribute('aColor', new THREE.BufferAttribute(col, 3));
+    geo.setAttribute('aSize', new THREE.BufferAttribute(size, 1));
+    geo.setAttribute('aSeed', new THREE.BufferAttribute(seed, 1));
+    return geo;
+  };
   const pointsMat = () => new THREE.ShaderMaterial({
-    uniforms: { uTime: shared.uTime, uPR: shared.uPR, uPulse: shared.uPulse },
-    vertexShader: PTS_V, fragmentShader: PTS_F,
-    transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
+    uniforms: { uTime: shared.uTime, uPR: shared.uPR, uPulse: shared.uPulse, uReveal: shared.uReveal, uSpeed: shared.uSpeed },
+    vertexShader: PTS_V, fragmentShader: PTS_F, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
   });
+  const envPoints = (n, fill, { spin = .05, amp = 0 } = {}) => new THREE.Points(
+    pointsGeo(Math.max(40, Math.round(n * Q.env)), fill),
+    new THREE.ShaderMaterial({
+      uniforms: { uTime: shared.uTime, uPR: shared.uPR, uReveal: shared.uReveal, uSpin: { value: spin }, uAmp: { value: amp } },
+      vertexShader: ENV_V, fragmentShader: PTS_F, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
+    }),
+  );
+  // Coloured gas clouds behind a world — gives each project its own atmosphere.
+  const nebula = (color) => {
+    const g = new THREE.Group();
+    const c1 = new THREE.Color(color);
+    const c2 = c1.clone().offsetHSL(.07, 0, -.08);
+    const c3 = c1.clone().offsetHSL(-.09, .05, -.12);
+    [[c1, 2, -2, -8, 26, .1], [c2, -7, 3, -11, 30, .08], [c3, 8, -3, -12, 24, .07], [c1, -3, 5, -5, 16, .06]]
+      .slice(0, Q.nebula)
+      .forEach(([c, x, y, z, s, o]) => { const sp = glow(c, s, o); sp.position.set(x, y, z); g.add(sp); });
+    return g;
+  };
 
   /* ---- World anchors: one planet per project, alternating sides ---- */
   const SPACING = 28;
@@ -148,31 +219,23 @@ export function createUniverse(canvas, { mobile = false, reduce = false, worlds 
 
   /* ---- Starfield ---- */
   {
-    const n = mobile ? 1600 : 3600;
-    const pos = new Float32Array(n * 3), col = new Float32Array(n * 3), size = new Float32Array(n), seed = new Float32Array(n);
     const palette = [new THREE.Color(0xffffff), new THREE.Color(0xcfe0ff), new THREE.Color(COLORS.teal), new THREE.Color(COLORS.violet), new THREE.Color(COLORS.sky)];
-    for (let i = 0; i < n; i++) {
-      pos[i * 3] = (Math.random() - .5) * 150;
-      pos[i * 3 + 1] = (Math.random() - .5) * 95;
-      pos[i * 3 + 2] = 40 - Math.random() * 230;
+    const depth = 60 + SPACING * (worlds.length + 2) + 40;
+    const geo = pointsGeo(Q.stars, (i, o) => {
+      o.x = (Math.random() - .5) * 150;
+      o.y = (Math.random() - .5) * 95;
+      o.z = 40 - Math.random() * depth;
       const r = Math.random();
-      const c = palette[r < .62 ? 0 : r < .82 ? 1 : r < .9 ? 2 : r < .96 ? 3 : 4];
-      col.set([c.r, c.g, c.b], i * 3);
-      size[i] = .5 + Math.pow(Math.random(), 3) * 2.4;
-      seed[i] = Math.random();
-    }
-    const geo = new THREE.BufferGeometry();
-    geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
-    geo.setAttribute('aColor', new THREE.BufferAttribute(col, 3));
-    geo.setAttribute('aSize', new THREE.BufferAttribute(size, 1));
-    geo.setAttribute('aSeed', new THREE.BufferAttribute(seed, 1));
+      o.color.copy(palette[r < .62 ? 0 : r < .82 ? 1 : r < .9 ? 2 : r < .96 ? 3 : 4]);
+      o.size = .5 + Math.pow(Math.random(), 3) * 2.4;
+    });
     scene.add(new THREE.Points(geo, pointsMat()));
   }
 
-  /* ---- Origin core (the studio) ---- */
+  /* ---- Origin core (the studio) + intro effects ---- */
   const core = new THREE.Group();
   scene.add(core);
-  const coreBody = new THREE.Mesh(new THREE.IcosahedronGeometry(1.6, mobile ? 20 : 40), orbMat(COLORS.teal, COLORS.deep, .14));
+  const coreBody = new THREE.Mesh(new THREE.IcosahedronGeometry(1.6, Q.detail), orbMat(COLORS.teal, COLORS.deep, .14));
   core.add(coreBody);
   const coreShell = new THREE.Mesh(new THREE.IcosahedronGeometry(2.35, 1), new THREE.MeshBasicMaterial({ color: COLORS.teal, wireframe: true, transparent: true, opacity: .16, blending: THREE.AdditiveBlending, depthWrite: false }));
   core.add(coreShell);
@@ -182,25 +245,35 @@ export function createUniverse(canvas, { mobile = false, reduce = false, worlds 
   [[3.4, .35, COLORS.teal], [4.4, -.5, COLORS.violet], [5.6, .9, COLORS.sky]].forEach(([r, tilt, c], i) => {
     const pivot = new THREE.Group();
     pivot.rotation.set(tilt, 0, tilt * .6);
-    pivot.add(new THREE.Line(circle(r), lineMat(c, .22)));
-    const moon = new THREE.Mesh(new THREE.SphereGeometry(.09, 12, 12), new THREE.MeshBasicMaterial({ color: c }));
-    const mg = glow(c, .9, .9);
+    const line = new THREE.Line(circle(r), lineMat(c, .22));
+    pivot.add(line);
     const holder = new THREE.Group();
+    const moon = new THREE.Mesh(new THREE.SphereGeometry(.09, 12, 12), new THREE.MeshBasicMaterial({ color: c, transparent: true }));
+    const mg = glow(c, .9, .9);
     moon.position.x = r; mg.position.x = r;
     holder.add(moon, mg);
     pivot.add(holder);
-    core.add(pivot);
-    orbits.push({ holder, speed: .35 - i * .08 });
+    scene.add(pivot);
+    orbits.push({ holder, line, moon, mg, speed: .35 - i * .08 });
   });
+  const flash = glow(0xe8fffa, 30, 0);
+  scene.add(flash);
+  const shockMat = new THREE.MeshBasicMaterial({ color: COLORS.teal, transparent: true, opacity: 0, side: THREE.DoubleSide, blending: THREE.AdditiveBlending, depthWrite: false });
+  const shock = new THREE.Mesh(new THREE.RingGeometry(.97, 1, 160, 1), shockMat);
+  const shock2 = new THREE.Mesh(shock.geometry, shockMat.clone());
+  shock2.material.color.set(COLORS.violet);
+  shock2.rotation.x = 1.1;
+  scene.add(shock, shock2);
 
-  /* ---- Planet builders ---- */
+  /* ---- Planet builders: each returns { group, update(e) } with its own environment ---- */
   const dummy = new THREE.Object3D();
   const deepOf = (c) => new THREE.Color(c).multiplyScalar(.14).getHex();
+  const lighter = (c, k) => new THREE.Color(c).lerp(new THREE.Color(0xffffff), k);
 
-  // Ringed planet (used for My moto by default)
+  // Mobility: ringed planet, asteroid belt, one moon.
   function ringPlanet(color) {
     const g = new THREE.Group();
-    g.add(new THREE.Mesh(new THREE.IcosahedronGeometry(1.5, mobile ? 12 : 24), orbMat(color, deepOf(color), .05)));
+    g.add(new THREE.Mesh(new THREE.IcosahedronGeometry(1.5, Math.round(Q.detail * .6)), orbMat(color, deepOf(color), .05)));
     g.add(glow(color, 9, .42));
     const ring = new THREE.Mesh(
       new THREE.RingGeometry(2.1, 3.6, 128, 1),
@@ -211,19 +284,31 @@ export function createUniverse(canvas, { mobile = false, reduce = false, worlds 
     );
     ring.rotation.set(-1.15, .25, .35);
     g.add(ring);
+    const beltPivot = new THREE.Group();
+    beltPivot.rotation.set(-1.15 + Math.PI / 2, .25, .35);
+    const warm = lighter(color, .55);
+    beltPivot.add(envPoints(1100, (i, o) => {
+      const a = Math.random() * Math.PI * 2;
+      const r = 4.1 + Math.pow(Math.random(), .7) * 2;
+      o.x = Math.cos(a) * r; o.z = Math.sin(a) * r; o.y = (Math.random() - .5) * .3;
+      o.color.copy(Math.random() < .7 ? new THREE.Color(color) : warm);
+      o.size = .35 + Math.pow(Math.random(), 3) * 1.6;
+    }, { spin: .09 }));
+    g.add(beltPivot);
     const moonPivot = new THREE.Group();
     moonPivot.rotation.set(.4, 0, -.3);
-    const moon = new THREE.Mesh(new THREE.IcosahedronGeometry(.22, 2), orbMat(new THREE.Color(color).lerp(new THREE.Color(0xffffff), .6).getHex(), deepOf(color), 0));
-    moon.position.x = 4.6;
+    const moon = new THREE.Mesh(new THREE.IcosahedronGeometry(.22, 2), orbMat(lighter(color, .6).getHex(), deepOf(color), 0));
+    moon.position.x = 6.6;
     moonPivot.add(moon);
     g.add(moonPivot);
+    g.add(nebula(color));
     return { group: g, update(e) { ring.rotation.z = .35 + e * .08; moonPivot.rotation.y = e * .4; g.rotation.y = Math.sin(e * .2) * .15; } };
   }
 
-  // Sound-wave planet (used for SyncSound by default)
+  // Audio: pulsing sound waves, an equalizer ring, and a breathing spectrum shell.
   function wavePlanet(color) {
     const g = new THREE.Group();
-    g.add(new THREE.Mesh(new THREE.IcosahedronGeometry(1.3, mobile ? 12 : 24), orbMat(color, deepOf(color), .1)));
+    g.add(new THREE.Mesh(new THREE.IcosahedronGeometry(1.3, Math.round(Q.detail * .6)), orbMat(color, deepOf(color), .1)));
     g.add(glow(color, 8, .42));
     const waves = [];
     const waveGeo = new THREE.RingGeometry(.985, 1, 128, 1);
@@ -239,6 +324,15 @@ export function createUniverse(canvas, { mobile = false, reduce = false, worlds 
     eqPivot.rotation.set(-1.2 + Math.PI / 2, .3, 0);
     eqPivot.add(eq);
     g.add(eqPivot);
+    const hi = lighter(color, .6);
+    g.add(envPoints(900, (i, o) => {
+      const u = Math.random() * 2 - 1, a = Math.random() * Math.PI * 2, s = Math.sqrt(1 - u * u);
+      const r = 5.4 + (Math.random() - .5) * .8;
+      o.x = s * Math.cos(a) * r; o.y = u * r; o.z = s * Math.sin(a) * r;
+      o.color.copy(Math.random() < .75 ? new THREE.Color(color) : hi);
+      o.size = .35 + Math.pow(Math.random(), 3) * 1.4;
+    }, { spin: .04, amp: .07 }));
+    g.add(nebula(color));
     return {
       group: g,
       update(e) {
@@ -262,7 +356,7 @@ export function createUniverse(canvas, { mobile = false, reduce = false, worlds 
     };
   }
 
-  // Crystal in a cage (used for the vault by default)
+  // Security: faceted crystal, wireframe cage, orbiting locks, drifting shards.
   function crystalPlanet(color) {
     const g = new THREE.Group();
     const crystal = new THREE.Mesh(new THREE.OctahedronGeometry(1.6, 0), orbMat(color, deepOf(color), 0));
@@ -271,12 +365,23 @@ export function createUniverse(canvas, { mobile = false, reduce = false, worlds 
     const cage = new THREE.Mesh(new THREE.DodecahedronGeometry(2.7, 0), new THREE.MeshBasicMaterial({ color, wireframe: true, transparent: true, opacity: .22, blending: THREE.AdditiveBlending, depthWrite: false }));
     g.add(cage);
     const LOCKS = 14;
-    const locks = new THREE.InstancedMesh(new THREE.BoxGeometry(.16, .16, .16), new THREE.MeshBasicMaterial({ color: new THREE.Color(color).lerp(new THREE.Color(0xffffff), .55) }), LOCKS);
+    const locks = new THREE.InstancedMesh(new THREE.BoxGeometry(.16, .16, .16), new THREE.MeshBasicMaterial({ color: lighter(color, .55) }), LOCKS);
     const lockPivot = new THREE.Group();
     lockPivot.rotation.set(.5, 0, .25);
     lockPivot.add(locks);
     lockPivot.add(new THREE.Line(circle(3.6), lineMat(color, .18)));
     g.add(lockPivot);
+    const SHARDS = Math.max(8, Math.round(26 * Q.env));
+    const shards = new THREE.InstancedMesh(new THREE.OctahedronGeometry(.14, 0), new THREE.MeshBasicMaterial({ color: lighter(color, .3), transparent: true, opacity: .75 }), SHARDS);
+    const shardData = Array.from({ length: SHARDS }, () => ({ r: 5 + Math.random() * 3.5, a: Math.random() * Math.PI * 2, y: (Math.random() - .5) * 5, s: .5 + Math.random() * 1.2, w: (Math.random() < .5 ? -1 : 1) * (.05 + Math.random() * .08) }));
+    g.add(shards);
+    g.add(envPoints(500, (i, o) => {
+      const a = Math.random() * Math.PI * 2, r = 6 + Math.random() * 3;
+      o.x = Math.cos(a) * r; o.z = Math.sin(a) * r; o.y = (Math.random() - .5) * 7;
+      o.color.copy(lighter(color, Math.random() * .5));
+      o.size = .3 + Math.pow(Math.random(), 3) * 1.2;
+    }, { spin: -.03 }));
+    g.add(nebula(color));
     return {
       group: g,
       update(e) {
@@ -293,16 +398,27 @@ export function createUniverse(canvas, { mobile = false, reduce = false, worlds 
           locks.setMatrixAt(i, dummy.matrix);
         }
         locks.instanceMatrix.needsUpdate = true;
+        shardData.forEach((d, i) => {
+          const a = d.a + e * d.w;
+          dummy.position.set(Math.cos(a) * d.r, d.y + Math.sin(e * .6 + i) * .3, Math.sin(a) * d.r);
+          dummy.rotation.set(e * .7 + i, e * .4 + i * 2, 0);
+          dummy.scale.setScalar(d.s);
+          dummy.updateMatrix();
+          shards.setMatrixAt(i, dummy.matrix);
+        });
+        shards.instanceMatrix.needsUpdate = true;
       },
     };
   }
 
   const BUILDERS = { ring: ringPlanet, waves: wavePlanet, crystal: crystalPlanet };
   const KINDS = Object.keys(BUILDERS);
+  const worldColors = [];
   const planets = worlds.map((w, i) => {
     const build = BUILDERS[w.planet] || BUILDERS[KINDS[i % KINDS.length]];
     let color = COLORS.teal;
-    try { color = new THREE.Color(w.accent || '#3cf2c8').getHex(); } catch {}
+    try { color = new THREE.Color(w.accent || '#3cf2c8').getHex(); } catch { /* keep teal */ }
+    worldColors.push(color);
     const p = build(color);
     p.group.position.copy(anchors[i]);
     scene.add(p.group);
@@ -315,31 +431,19 @@ export function createUniverse(canvas, { mobile = false, reduce = false, worlds 
   galaxy.rotation.x = .12;
   scene.add(galaxy);
   {
-    const n = mobile ? 3200 : 7500;
-    const pos = new Float32Array(n * 3), col = new Float32Array(n * 3), size = new Float32Array(n), seed = new Float32Array(n);
-    const inner = new THREE.Color(COLORS.teal), outer = new THREE.Color(COLORS.violet), hot = new THREE.Color(COLORS.amber), c = new THREE.Color();
+    const inner = new THREE.Color(COLORS.teal), outer = new THREE.Color(COLORS.violet);
+    const hot = worldColors.map((c) => new THREE.Color(c));
     const ARMS = 4, R = 22;
-    for (let i = 0; i < n; i++) {
+    galaxy.add(new THREE.Points(pointsGeo(Q.galaxy, (i, o) => {
       const r = Math.pow(Math.random(), 1.5) * R;
-      const arm = (i % ARMS) / ARMS * Math.PI * 2;
-      const ang = arm + r * .36;
+      const ang = (i % ARMS) / ARMS * Math.PI * 2 + r * .36;
       const spread = (1.2 - r / R) * .25 + .12;
-      const rx = Math.pow(Math.random(), 3) * (Math.random() < .5 ? 1 : -1) * r * spread;
-      const ry = Math.pow(Math.random(), 3) * (Math.random() < .5 ? 1 : -1) * r * spread * .45;
-      const rz = Math.pow(Math.random(), 3) * (Math.random() < .5 ? 1 : -1) * r * spread;
-      pos.set([Math.cos(ang) * r + rx, ry, Math.sin(ang) * r + rz], i * 3);
-      c.copy(inner).lerp(outer, r / R);
-      if (Math.random() < .04) c.copy(hot);
-      col.set([c.r, c.g, c.b], i * 3);
-      size[i] = .5 + Math.pow(Math.random(), 4) * 2.2 + (r < 2 ? 1 : 0);
-      seed[i] = Math.random();
-    }
-    const geo = new THREE.BufferGeometry();
-    geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
-    geo.setAttribute('aColor', new THREE.BufferAttribute(col, 3));
-    geo.setAttribute('aSize', new THREE.BufferAttribute(size, 1));
-    geo.setAttribute('aSeed', new THREE.BufferAttribute(seed, 1));
-    galaxy.add(new THREE.Points(geo, pointsMat()));
+      const j = () => Math.pow(Math.random(), 3) * (Math.random() < .5 ? 1 : -1) * r * spread;
+      o.x = Math.cos(ang) * r + j(); o.y = j() * .45; o.z = Math.sin(ang) * r + j();
+      o.color.copy(inner).lerp(outer, r / R);
+      if (hot.length && Math.random() < .05) o.color.copy(hot[(Math.random() * hot.length) | 0]);
+      o.size = .5 + Math.pow(Math.random(), 4) * 2.2 + (r < 2 ? 1 : 0);
+    }), pointsMat()));
     galaxy.add(glow(COLORS.teal, 16, .55));
     galaxy.add(glow(COLORS.violet, 34, .22));
   }
@@ -350,59 +454,69 @@ export function createUniverse(canvas, { mobile = false, reduce = false, worlds 
     anchors.forEach((a, i) => { lanePts.push(V(i % 2 ? 4 : -4, i % 2 ? 3 : -1, a.z + SPACING / 2), a); });
     lanePts.push(V(3, -2, G.z + 21), G);
     const curve = new THREE.CatmullRomCurve3(lanePts);
-    const pts = curve.getPoints(mobile ? 500 : 900);
+    const pts = curve.getPoints(tier === 'low' ? 400 : 900);
     const geo = new THREE.BufferGeometry().setFromPoints(pts);
     geo.setAttribute('aT', new THREE.BufferAttribute(new Float32Array(pts.map((_, i) => i / (pts.length - 1))), 1));
     scene.add(new THREE.Line(geo, new THREE.ShaderMaterial({
-      uniforms: { uTime: shared.uTime, uColor: { value: new THREE.Color(COLORS.teal) } },
+      uniforms: { uTime: shared.uTime, uColor: { value: new THREE.Color(COLORS.teal) }, uReveal: shared.uReveal, uSpeed: shared.uSpeed },
       vertexShader: LANE_V, fragmentShader: LANE_F, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
     })));
   }
 
-  /* ---- Camera keyframes ---- */
+  /* ---- Camera path: a continuous spline through every stop ---- */
+  const bg = new THREE.Color(COLORS.bg);
+  // Mix in sRGB so a small k stays a subtle tint (mixing in linear space brightens it a lot).
+  const tintOf = (c, k) => bg.clone().convertLinearToSRGB().lerp(new THREE.Color(c).convertLinearToSRGB(), k).convertSRGBToLinear();
   let KF = [];
+  let posCurve = null;
+  let lookCurve = null;
   let isMobileLayout = mobile;
-  function buildKeyframes(m) {
+  function buildPath(m) {
     const side = m ? 0 : 3.2;
     const dy = m ? -2.4 : 0;
     const back = m ? 12.5 : 9;
     KF = [
-      { pos: V(0, 0, m ? 13 : 10), look: V(m ? 0 : -3.4, dy, 0) },
-      ...anchors.map((a, i) => {
-        const s = i % 2 ? side : -side; // look past the planet so it sits opposite its panel
-        return { pos: a.clone().add(V(0, 0, back)), look: a.clone().add(V(s, dy, 0)) };
-      }),
-      { pos: G.clone().add(V(0, 12, m ? 38 : 27)), look: G.clone().add(V(m ? 0 : -7, m ? -4 : 0, 0)) },
-      { pos: G.clone().add(V(17, 5, 12)), look: G.clone() },
-      { pos: G.clone().add(V(0, 2.4, 7)), look: G.clone().add(V(0, -1, -5)) },
-      { pos: V(0, 48, G.z + 117), look: V(0, -8, G.z + 51) },
+      { pos: V(0, 0, m ? 13 : 10), look: V(m ? 0 : -3.4, dy, 0), tint: tintOf(COLORS.teal, .03) },
+      ...anchors.map((a, i) => ({
+        pos: a.clone().add(V(0, 0, back)),
+        look: a.clone().add(V(i % 2 ? side : -side, dy, 0)), // look past the planet so it sits opposite its panel
+        tint: tintOf(worldColors[i], .07),
+      })),
+      { pos: G.clone().add(V(0, 12, m ? 38 : 27)), look: G.clone().add(V(m ? 0 : -7, m ? -4 : 0, 0)), tint: tintOf(COLORS.violet, .05) },
+      { pos: G.clone().add(V(17, 5, 12)), look: G.clone(), tint: tintOf(COLORS.violet, .06) },
+      { pos: G.clone().add(V(0, 2.4, 7)), look: G.clone().add(V(0, -1, -5)), tint: tintOf(COLORS.teal, .05) },
+      { pos: V(0, 48, G.z + 117), look: V(0, -8, G.z + 51), tint: tintOf(COLORS.sky, .03) },
     ];
+    posCurve = new THREE.CatmullRomCurve3(KF.map((k) => k.pos), false, 'centripetal');
+    lookCurve = new THREE.CatmullRomCurve3(KF.map((k) => k.look), false, 'centripetal');
   }
-  buildKeyframes(mobile);
+  buildPath(mobile);
 
   let tTarget = 0;
-  const target = { pos: V(), look: V() };
+  const target = { pos: V(), look: V(), tint: new THREE.Color() };
   function sample(t) {
     const n = KF.length - 1;
     t = clamp(t, 0, n);
     const i = Math.min(Math.floor(t), n - 1);
-    const f = smooth(.1, .9, t - i);
-    target.pos.lerpVectors(KF[i].pos, KF[i + 1].pos, f);
-    target.look.lerpVectors(KF[i].look, KF[i + 1].look, f);
-    const arc = Math.sin(f * Math.PI);
-    target.pos.y += arc * 2.6;
-    target.pos.x += arc * (i % 2 ? -2.4 : 2.4);
+    const f = smooth(.06, .94, t - i); // brief dwell at each stop, continuous glide between
+    posCurve.getPoint((i + f) / n, target.pos);
+    lookCurve.getPoint((i + f) / n, target.look);
+    target.tint.copy(KF[i].tint).lerp(KF[i + 1].tint, f);
   }
   sample(0);
   const curPos = target.pos.clone();
   const curLook = target.look.clone();
+  const curTint = target.tint.clone();
+  const prevPos = curPos.clone();
+  const vel = V();
+  const right = V();
   camera.position.copy(curPos);
   camera.lookAt(curLook);
 
   const pointer = { x: 0, y: 0, sx: 0, sy: 0 };
 
   /* ---- Resize ---- */
-  let lastW = 0, lastH = 0;
+  let lastW = 0, lastH = 0, baseFov = mobile ? 64 : 52;
   function resize(force = false) {
     const w = window.innerWidth, h = window.innerHeight;
     if (!force && w === lastW && Math.abs(h - lastH) < 120) return;
@@ -410,26 +524,32 @@ export function createUniverse(canvas, { mobile = false, reduce = false, worlds 
     renderer.setSize(w, h, false);
     camera.aspect = w / h;
     const m = w < 760;
-    camera.fov = m ? 64 : 52;
+    baseFov = m ? 64 : 52;
+    camera.fov = baseFov;
     camera.updateProjectionMatrix();
-    if (m !== isMobileLayout) { isMobileLayout = m; buildKeyframes(m); }
+    if (m !== isMobileLayout) { isMobileLayout = m; buildPath(m); }
   }
   resize(true);
   window.addEventListener('resize', () => resize());
 
+  /* ---- Intro state ---- */
+  let introT = reduce ? 1 : 0;
+  let introDur = 3.6;
+  let introPlaying = false;
+  let ignited = reduce;
+
   /* ---- Loop ---- */
   const clock = new THREE.Clock();
-  const timeScale = reduce ? .2 : 1;
-  let elapsed = 0, frames = 0, slowAcc = 0, degraded = false, running = true;
+  let timeScale = reduce ? .2 : 1;
+  let elapsed = 0, frames = 0, slowAcc = 0, degraded = false, roll = 0, speed = 0;
 
   function tick() {
-    if (!running) return;
     const dt = Math.min(clock.getDelta(), .05);
     elapsed += dt * timeScale;
     shared.uTime.value = elapsed;
     shared.uPulse.value *= Math.exp(-dt * 2.6);
 
-    // adaptive quality
+    // adaptive quality: drop resolution if the first seconds run slow
     frames++;
     if (!degraded && frames > 60 && frames < 240) {
       slowAcc += dt;
@@ -441,15 +561,61 @@ export function createUniverse(canvas, { mobile = false, reduce = false, worlds 
       }
     }
 
-    // camera
+    // intro timeline
+    if (introPlaying) {
+      introT = Math.min(1, introT + dt / introDur);
+      if (introT >= 1) introPlaying = false;
+    }
+    const it = introT;
+    shared.uReveal.value = smooth(0, .62, it);
+    const ign = smooth(.28, .64, it);
+    core.scale.setScalar(Math.max(.001, easeOutBack(ign)));
+    if (!ignited && it > .3) { ignited = true; shared.uPulse.value = 1.3; }
+    flash.material.opacity = smooth(.26, .32, it) * (1 - smooth(.32, .62, it)) * .9;
+    flash.scale.setScalar(8 + 34 * smooth(.28, .62, it));
+    const sp = smooth(.3, .82, it);
+    const shockOn = it > .3 && it < 1 ? 1 : 0;
+    shock.scale.setScalar(1 + sp * 40);
+    shock.material.opacity = (1 - sp) * .8 * shockOn;
+    const sp2 = smooth(.36, .9, it);
+    shock2.scale.setScalar(1 + sp2 * 28);
+    shock2.material.opacity = (1 - sp2) * .6 * (it > .36 && it < 1 ? 1 : 0);
+    const orbitIn = smooth(.55, .92, it);
+    orbits.forEach((o) => {
+      o.line.material.opacity = .22 * orbitIn;
+      o.moon.material.opacity = orbitIn;
+      o.mg.material.opacity = .9 * orbitIn;
+    });
+
+    // camera travel
     sample(tTarget);
     const k = reduce ? 1 : 1 - Math.exp(-dt * 2.4);
     curPos.lerp(target.pos, k);
     curLook.lerp(target.look, k);
+    curTint.lerp(target.tint, 1 - Math.exp(-dt * 2));
+    renderer.setClearColor(curTint, 1);
+
+    vel.subVectors(curPos, prevPos).divideScalar(Math.max(dt, 1e-3));
+    prevPos.copy(curPos);
+    speed += (clamp(vel.length() / 45, 0, 1) - speed) * (1 - Math.exp(-dt * 4));
+    shared.uSpeed.value = reduce ? 0 : speed;
+
     pointer.sx += (pointer.x - pointer.sx) * (1 - Math.exp(-dt * 3));
     pointer.sy += (pointer.y - pointer.sy) * (1 - Math.exp(-dt * 3));
-    camera.position.set(curPos.x + pointer.sx * .8, curPos.y + pointer.sy * .5, curPos.z);
+    const off = 1 - easeInOutCubic(it); // intro: start far out and swoop in
+    camera.position.set(
+      curPos.x + pointer.sx * .8 + Math.sin(off * 1.3) * 22 * off,
+      curPos.y + pointer.sy * .5 + 9 * off,
+      curPos.z + 70 * off,
+    );
     camera.lookAt(curLook);
+    // bank into lateral motion, like a ship turning
+    right.setFromMatrixColumn(camera.matrixWorld, 0);
+    const lateral = reduce ? 0 : clamp(-vel.dot(right) * .006, -.22, .22);
+    roll += (lateral + off * .35 - roll) * (1 - Math.exp(-dt * 3));
+    camera.rotateZ(roll);
+    const fov = baseFov + (reduce ? 0 : speed * 9) + off * 12;
+    if (Math.abs(camera.fov - fov) > .01) { camera.fov = fov; camera.updateProjectionMatrix(); }
 
     // core
     const e = elapsed;
@@ -457,18 +623,18 @@ export function createUniverse(canvas, { mobile = false, reduce = false, worlds 
     coreBody.rotation.x = Math.sin(e * .3) * .2;
     coreShell.rotation.y = -e * .1;
     coreShell.rotation.z = e * .05;
-    coreGlow.material.opacity = .45 + Math.sin(e * 1.4) * .06 + shared.uPulse.value * .4;
+    coreGlow.material.opacity = (.45 + Math.sin(e * 1.4) * .06 + shared.uPulse.value * .4) * Math.min(1, ign * 1.5);
     orbits.forEach((o) => { o.holder.rotation.y = e * o.speed; });
 
     planets.forEach((p) => p.update(e));
-
-    // galaxy
     galaxy.rotation.y = e * .03;
 
     renderer.render(scene, camera);
     requestAnimationFrame(tick);
   }
 
+  // Compile every shader now (while the loader is up) so the first frames don't stutter.
+  renderer.compile(scene, camera);
   renderer.render(scene, camera);
   requestAnimationFrame(tick);
 
@@ -477,6 +643,19 @@ export function createUniverse(canvas, { mobile = false, reduce = false, worlds 
     setProgress(t) { tTarget = t; },
     setPointer(x, y) { pointer.x = x; pointer.y = y; },
     pulse(amount = 1) { shared.uPulse.value = Math.min(1.4, shared.uPulse.value + amount); },
-    stop() { running = false; },
+    // Plays the cinematic entrance. Returns its duration in seconds (0 when motion is reduced).
+    intro(fast = false) {
+      if (reduce) { introT = 1; return 0; }
+      introDur = fast ? 1.8 : 3.6;
+      introT = 0;
+      ignited = false;
+      introPlaying = true;
+      return introDur;
+    },
+    setReduced(b) {
+      reduce = b;
+      timeScale = b ? .2 : 1;
+      if (b) { introT = 1; introPlaying = false; }
+    },
   };
 }

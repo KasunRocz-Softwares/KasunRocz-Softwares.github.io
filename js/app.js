@@ -2,11 +2,41 @@
 // To add a project, edit projects.json only. Nothing here needs to change.
 const ORG = 'KasunRocz-Softwares';
 const root = document.documentElement;
-const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const fine = matchMedia('(pointer: fine)').matches;
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+const smooth = (a, b, x) => { const t = clamp((x - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); };
 const GLYPHS = '!<>-_\\/[]{}=+*^?#01ABCDEFXZ';
 const FALLBACK_ACCENTS = ['#ffb547', '#5cc8ff', '#b197fc', '#ff7eb6', '#7ef29d'];
+const STUDIO_PROMISES = ['Local-first', 'Zero tracking', 'No accounts', 'Open source'];
+
+/* ---------------- Motion preference (OS setting, overridable with the Motion toggle) ---------------- */
+let reduce = root.classList.contains('rm');
+const motionBtn = document.querySelector('.motion-btn');
+function applyMotion() {
+  root.classList.toggle('rm', reduce);
+  motionBtn?.setAttribute('aria-pressed', String(!reduce));
+  motionBtn?.setAttribute('aria-label', reduce ? 'Animations off. Turn on' : 'Animations on. Turn off');
+}
+applyMotion();
+motionBtn?.addEventListener('click', () => {
+  reduce = !reduce;
+  try { localStorage.setItem('kr-motion', reduce ? 'reduced' : 'full'); } catch { /* storage blocked */ }
+  applyMotion();
+  universe?.setReduced(reduce);
+  onScroll();
+});
+
+/* ---------------- Device quality tier ---------------- */
+function pickTier() {
+  const conn = navigator.connection || {};
+  const mem = navigator.deviceMemory || 8;
+  const cores = navigator.hardwareConcurrency || 8;
+  const small = innerWidth < 760 || matchMedia('(pointer: coarse)').matches;
+  if (conn.saveData || mem <= 2 || (small && (mem <= 4 || cores <= 4))) return 'low';
+  if (small || mem <= 4 || cores <= 4) return 'medium';
+  return 'high';
+}
+const tier = pickTier();
 
 /* ---------------- Small DOM helper (textContent only, so JSON/API text is never parsed as HTML) ---------------- */
 function el(tag, attrs = {}, ...kids) {
@@ -15,7 +45,6 @@ function el(tag, attrs = {}, ...kids) {
     if (v == null || v === false) continue;
     if (k === 'class') n.className = v;
     else if (k === 'text') n.textContent = v;
-    else if (k === 'style') n.style.cssText = v;
     else n.setAttribute(k, v === true ? '' : v);
   }
   for (const kid of kids) if (kid) n.append(kid);
@@ -127,7 +156,7 @@ function world(p, i) {
     btn(p.website, p.download ? 'Website' : 'Visit website', !p.download),
     btn(p.repo ? `https://github.com/${p.repo}` : null, 'Source', false, true));
 
-  const panel = el('article', { class: 'world-panel tilt reveal' },
+  const panel = el('article', { class: 'world-panel tilt' },
     head, media,
     el('div', { class: 'world-title' }, icon, el('h3', { text: p.name })),
     p.tagline ? el('p', { class: 'world-tagline', text: p.tagline }) : null,
@@ -138,7 +167,7 @@ function world(p, i) {
 
   const section = el('section', {
     class: 'world' + (i % 2 ? ' right' : ''),
-    id: p.id || null,
+    id: p.id || `world-${i + 1}`,
     'data-kf': '',
     'data-sector': p.name,
     'data-accent': accent,
@@ -147,19 +176,7 @@ function world(p, i) {
   section.style.setProperty('--accent-rgb', hexToRgb(accent));
 
   if (p.repo) liveStats(p.repo, version, stars);
-  return { section, accent };
-}
-
-/* Constellation tags come from the projects themselves, plus the studio's promises. */
-function buildSphereTags(projects) {
-  const seen = new Set();
-  const tags = [];
-  const add = (t) => { const k = String(t).trim(); if (k && !seen.has(k.toLowerCase())) { seen.add(k.toLowerCase()); tags.push(k); } };
-  projects.forEach((p) => (p.platforms || []).forEach(add));
-  projects.forEach((p) => (p.features || []).forEach(add));
-  projects.forEach((p) => p.license && add(p.license));
-  ['Local-first', 'Zero tracking', 'No accounts', 'Open source', 'GitHub'].forEach(add);
-  return tags.slice(0, 32);
+  return { section, panel, accent };
 }
 
 /* Other public org repos with GitHub Pages that aren't in projects.json show up automatically. */
@@ -236,10 +253,11 @@ const observeReveals = (scope) => scope.querySelectorAll('.reveal:not(.in)').for
 
 /* ---------------- Pointer interactions ---------------- */
 function bindPointerFX(scope) {
-  if (!fine || reduce) return;
+  if (!fine) return;
   scope.querySelectorAll('.magnetic:not([data-fx])').forEach((n) => {
     n.dataset.fx = '';
     n.addEventListener('pointermove', (e) => {
+      if (reduce) return;
       const r = n.getBoundingClientRect();
       n.style.transform = `translate(${(e.clientX - (r.left + r.width / 2)) * .22}px, ${(e.clientY - (r.top + r.height / 2)) * .32}px)`;
     });
@@ -253,79 +271,232 @@ function bindPointerFX(scope) {
       const py = (e.clientY - r.top) / r.height;
       n.style.setProperty('--mx', `${px * 100}%`);
       n.style.setProperty('--my', `${py * 100}%`);
-      n.style.transform = `perspective(1100px) rotateX(${(.5 - py) * 5}deg) rotateY(${(px - .5) * 6}deg)`;
+      if (!reduce) n.style.transform = `perspective(1100px) rotateX(${(.5 - py) * 5}deg) rotateY(${(px - .5) * 6}deg)`;
     });
     n.addEventListener('pointerleave', () => { n.style.transform = ''; });
   });
 }
 
-/* ---------------- Constellation tag sphere ---------------- */
-function initSphere(sphere, labels) {
-  sphere.replaceChildren(...labels.map((t) => el('span', { class: 'tag', role: 'listitem', text: t })));
-  const tags = [...sphere.children];
-  const N = tags.length;
-  if (!N) return;
-  const pts = tags.map((_, i) => {
-    const phi = Math.acos(1 - (2 * (i + .5)) / N);
-    const th = Math.PI * (1 + Math.sqrt(5)) * (i + .5);
-    return [Math.cos(th) * Math.sin(phi), Math.sin(th) * Math.sin(phi), Math.cos(phi)];
-  });
-  const baseVy = reduce ? 0 : .0035;
-  let rx = .3, ry = 0, vx = 0, vy = baseVy;
-  let visible = false, dragging = false, lastX = 0, lastY = 0, raf = 0;
+/* ---------------- Constellation: clickable nodes with project connections ---------------- */
+function buildGraph(projects, accents) {
+  const tags = new Map();
+  const add = (label, pi) => {
+    const t = String(label || '').trim();
+    if (!t) return;
+    const k = t.toLowerCase();
+    if (!tags.has(k)) tags.set(k, { label: t, projects: new Set() });
+    tags.get(k).projects.add(pi);
+  };
+  // Most general first, so small screens (which show fewer nodes) keep the platforms and promises.
+  projects.forEach((p, pi) => (p.platforms || []).forEach((t) => add(t, pi)));
+  projects.forEach((p, pi) => { if (p.license) add(p.license, pi); });
+  STUDIO_PROMISES.forEach((t) => projects.forEach((_, pi) => add(t, pi)));
+  projects.forEach((p, pi) => (p.features || []).forEach((t) => add(t, pi)));
+  return {
+    hubs: projects.map((p, i) => ({ name: p.name, tagline: p.tagline, accent: accents[i], rgb: hexToRgb(accents[i]) })),
+    tags: [...tags.values()].slice(0, innerWidth < 760 ? 18 : 34),
+  };
+}
 
-  const render = () => {
-    const R = sphere.clientWidth * .4;
+function fibonacci(n, i) {
+  const phi = Math.acos(1 - (2 * (i + .5)) / n);
+  const th = Math.PI * (1 + Math.sqrt(5)) * (i + .5);
+  return [Math.cos(th) * Math.sin(phi), Math.sin(th) * Math.sin(phi), Math.cos(phi)];
+}
+
+function initConstellation(sphere, graph, worldSections) {
+  const nodesEl = sphere.querySelector('.sphere-nodes');
+  const svg = sphere.querySelector('.sphere-links');
+  const info = document.getElementById('node-info');
+  const SVGNS = 'http://www.w3.org/2000/svg';
+
+  // Projects sit on an inner shell, capabilities on the outer shell.
+  const nodes = [
+    ...graph.hubs.map((h, i) => ({ kind: 'hub', i, label: h.name, hub: h, p: fibonacci(graph.hubs.length, i), r: .48 })),
+    ...graph.tags.map((t, i) => ({ kind: 'tag', i, label: t.label, tag: t, p: fibonacci(graph.tags.length, i), r: 1 })),
+  ];
+  nodes.forEach((n) => {
+    n.el = el('button', { class: 'node' + (n.kind === 'hub' ? ' hub' : ''), type: 'button', text: n.label });
+    if (n.kind === 'hub') n.el.style.setProperty('--hub-rgb', n.hub.rgb);
+    n.el.setAttribute('aria-label', n.kind === 'hub' ? `Project: ${n.label}` : `Capability: ${n.label}`);
+    nodesEl.append(n.el);
+  });
+  const hubs = nodes.filter((n) => n.kind === 'hub');
+  const links = [];
+  nodes.filter((n) => n.kind === 'tag').forEach((t) => {
+    t.tag.projects.forEach((pi) => {
+      const h = hubs[pi];
+      const line = document.createElementNS(SVGNS, 'line');
+      line.setAttribute('stroke', h.hub.accent);
+      svg.append(line);
+      links.push({ t, h, line });
+    });
+  });
+
+  let active = null; // the selected node
+  let hover = null;
+  const related = (n) => {
+    const set = new Set([n]);
+    links.forEach((l) => { if (l.t === n) set.add(l.h); if (l.h === n) set.add(l.t); });
+    return set;
+  };
+
+  function showInfo(n) {
+    info.replaceChildren();
+    if (!n) {
+      info.append(el('p', { class: 'mono', text: 'Drag to spin · Select a node' }), el('p', { class: 'node-info-title', text: 'Pick any node to see its connections.' }));
+      info.style.removeProperty('--hub-rgb');
+      return;
+    }
+    const fly = (h) => {
+      const b = el('button', { type: 'button' }, el('i'), document.createTextNode(`Fly to ${h.label} →`));
+      b.style.setProperty('--hub-rgb', h.hub.rgb);
+      b.addEventListener('click', () => worldSections[h.i]?.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'center' }));
+      return b;
+    };
+    if (n.kind === 'hub') {
+      const count = links.filter((l) => l.h === n).length;
+      info.style.setProperty('--hub-rgb', n.hub.rgb);
+      info.append(
+        el('p', { class: 'mono', text: 'Project world' }),
+        el('p', { class: 'node-info-title', text: n.label }),
+        el('p', { class: 'node-info-sub', text: `${n.hub.tagline ? n.hub.tagline + ' ' : ''}Linked to ${count} capabilities.` }),
+        el('div', { class: 'node-links' }, fly(n)));
+    } else {
+      const ps = hubs.filter((h) => n.tag.projects.has(h.i));
+      info.style.removeProperty('--hub-rgb');
+      info.append(
+        el('p', { class: 'mono', text: 'Capability' }),
+        el('p', { class: 'node-info-title', text: n.label }),
+        el('p', { class: 'node-info-sub', text: ps.length === hubs.length ? 'Shared by every project.' : `Found in ${ps.map((h) => h.label).join(' and ')}.` }),
+        el('div', { class: 'node-links' }, ...ps.map(fly)));
+    }
+  }
+
+  // rotation state
+  const baseVy = () => (reduce ? 0 : .0032);
+  let rx = .3, ry = 0, vx = 0, vy = baseVy();
+  let target = null;
+  let visible = false, dragging = false, pressed = false, moved = 0, lastX = 0, lastY = 0, raf = 0;
+
+  function select(n) {
+    active = n === active ? null : n;
+    showInfo(active);
+    if (active) {
+      // turn the sphere so the chosen node faces the viewer
+      const [x, y, z] = active.p;
+      const tRy = -Math.atan2(x, z);
+      const z1 = Math.hypot(x, z);
+      const tRx = Math.atan2(y, z1);
+      const wrap = (a, b) => b + ((((a - b) % (2 * Math.PI)) + 3 * Math.PI) % (2 * Math.PI)) - Math.PI;
+      target = { rx: wrap(tRx, rx), ry: wrap(tRy, ry) };
+    } else {
+      target = null;
+    }
+    kick();
+  }
+
+  nodes.forEach((n) => {
+    n.el.addEventListener('click', (e) => { if (moved > 6) { e.preventDefault(); return; } select(n); });
+    n.el.addEventListener('pointerenter', () => { hover = n; kick(); });
+    n.el.addEventListener('pointerleave', () => { if (hover === n) hover = null; kick(); });
+    n.el.addEventListener('focus', () => { hover = n; kick(); });
+    n.el.addEventListener('blur', () => { if (hover === n) hover = null; kick(); });
+  });
+
+  function render() {
+    const W = sphere.clientWidth;
+    const R = W * .4;
+    const c = W / 2;
     const cx = Math.cos(rx), sx = Math.sin(rx), cy = Math.cos(ry), sy = Math.sin(ry);
-    for (let i = 0; i < N; i++) {
-      const [x, y, z] = pts[i];
+    const focus = active || hover;
+    const rel = focus ? related(focus) : null;
+    nodes.forEach((n) => {
+      const [x, y, z] = n.p;
       const x1 = x * cy + z * sy;
       const z1 = -x * sy + z * cy;
       const y1 = y * cx - z1 * sx;
       const z2 = y * sx + z1 * cx;
       const depth = (z2 + 1) / 2;
-      const t = tags[i];
-      t.style.transform = `translate(-50%, -50%) translate3d(${(x1 * R).toFixed(1)}px, ${(y1 * R).toFixed(1)}px, 0) scale(${(.62 + depth * .48).toFixed(3)})`;
-      t.style.opacity = (.22 + depth * .78).toFixed(2);
-      t.style.zIndex = String(Math.round(depth * 100));
-      t.style.filter = depth < .35 ? `blur(${((.35 - depth) * 4).toFixed(1)}px)` : '';
+      n.sx = x1 * R * n.r; n.sy = y1 * R * n.r; n.depth = depth;
+      const dim = rel && !rel.has(n) ? .18 : 1;
+      const scale = (n.kind === 'hub' ? .85 : .62) + depth * (n.kind === 'hub' ? .3 : .48);
+      n.el.style.transform = `translate(-50%, -50%) translate3d(${n.sx.toFixed(1)}px, ${n.sy.toFixed(1)}px, 0) scale(${scale.toFixed(3)})`;
+      n.el.style.opacity = ((n.kind === 'hub' ? .55 + depth * .45 : .22 + depth * .78) * dim).toFixed(2);
+      n.el.style.zIndex = String(Math.round(depth * 100) + (n.kind === 'hub' ? 50 : 0) + (rel && rel.has(n) ? 200 : 0));
+      n.el.style.filter = depth < .35 && !(rel && rel.has(n)) ? `blur(${((.35 - depth) * 4).toFixed(1)}px)` : '';
+      n.el.classList.toggle('is-active', n === active);
+      n.el.classList.toggle('is-related', !!(rel && rel.has(n) && n !== focus));
+    });
+    svg.setAttribute('viewBox', `0 0 ${W} ${W}`);
+    links.forEach((l) => {
+      const hot = rel && rel.has(l.t) && rel.has(l.h) && (l.t === focus || l.h === focus);
+      l.line.setAttribute('x1', (c + l.t.sx).toFixed(1));
+      l.line.setAttribute('y1', (c + l.t.sy).toFixed(1));
+      l.line.setAttribute('x2', (c + l.h.sx).toFixed(1));
+      l.line.setAttribute('y2', (c + l.h.sy).toFixed(1));
+      const d = (l.t.depth + l.h.depth) / 2;
+      l.line.style.strokeOpacity = (hot ? .55 + d * .4 : (rel ? .02 : .05 + d * .1)).toFixed(3);
+      l.line.classList.toggle('hot', !!hot);
+    });
+  }
+
+  function loop() {
+    if (target && !dragging) {
+      const k = reduce ? 1 : .08;
+      rx += (target.rx - rx) * k;
+      ry += (target.ry - ry) * k;
+      vx = 0; vy = 0;
+    } else if (!dragging) {
+      vx += (0 - vx) * .03;
+      vy += ((hover ? 0 : baseVy()) - vy) * .03;
+      rx += vx; ry += vy;
     }
-  };
-  const loop = () => {
-    if (!dragging) { vx += (0 - vx) * .03; vy += (baseVy - vy) * .03; }
-    rx += vx; ry += vy;
     render();
-    if (visible || dragging) raf = requestAnimationFrame(loop);
-  };
-  new IntersectionObserver(([e]) => {
-    visible = e.isIntersecting;
-    cancelAnimationFrame(raf);
-    if (visible) raf = requestAnimationFrame(loop);
-  }).observe(sphere);
+    const settling = target && (Math.abs(target.rx - rx) > .001 || Math.abs(target.ry - ry) > .001);
+    const spinning = Math.abs(vx) > .0001 || Math.abs(vy) > .0001;
+    if (visible && (dragging || settling || spinning || hover)) raf = requestAnimationFrame(loop);
+    else raf = 0;
+  }
+  function kick() { if (!raf && visible) raf = requestAnimationFrame(loop); else if (!visible) render(); }
+
+  new IntersectionObserver(([e]) => { visible = e.isIntersecting; if (visible) kick(); }).observe(sphere);
   render();
 
   sphere.addEventListener('pointerdown', (e) => {
-    dragging = true; lastX = e.clientX; lastY = e.clientY;
-    sphere.classList.add('dragging');
-    sphere.setPointerCapture(e.pointerId);
+    pressed = true; moved = 0; lastX = e.clientX; lastY = e.clientY;
   });
   sphere.addEventListener('pointermove', (e) => {
-    if (!dragging) return;
-    vy = (e.clientX - lastX) * .006;
-    vx = -(e.clientY - lastY) * .006;
+    if (!pressed) return;
+    const dx = e.clientX - lastX, dy = e.clientY - lastY;
+    moved += Math.abs(dx) + Math.abs(dy);
+    if (!dragging && moved > 6) {
+      dragging = true; target = null;
+      sphere.classList.add('dragging');
+      sphere.setPointerCapture(e.pointerId);
+      kick();
+    }
+    if (dragging) {
+      vy = dx * .006; vx = -dy * .006;
+      rx += vx; ry += vy;
+    }
     lastX = e.clientX; lastY = e.clientY;
   });
-  const end = () => { dragging = false; sphere.classList.remove('dragging'); };
+  const end = () => { pressed = false; dragging = false; sphere.classList.remove('dragging'); kick(); };
   sphere.addEventListener('pointerup', end);
   sphere.addEventListener('pointercancel', end);
+  // clicking empty space clears the selection
+  sphere.addEventListener('click', (e) => { if (moved <= 6 && !e.target.closest('.node')) select(null); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && active) select(null); });
 }
 
-/* ---------------- Scroll → scene keyframes, HUD, readout ---------------- */
+/* ---------------- Scroll → scene keyframes, panels, HUD, readout ---------------- */
 let universe = null;
 let kfEls = [];
 let sectors = [];
 let accents = [];
 let centers = [];
+let panels = [];
 let maxScroll = 1;
 let activeIdx = -1;
 const hud = document.getElementById('hud');
@@ -358,10 +529,27 @@ function computeT() {
   return centers.length - 1;
 }
 
+// Project panels materialise as the camera arrives at their planet and dissolve as it leaves.
+function updatePanels() {
+  const vh = innerHeight;
+  panels.forEach((p) => {
+    const r = p.getBoundingClientRect();
+    const d = Math.abs(r.top + r.height / 2 - vh / 2) / vh;
+    const vis = 1 - smooth(.28, .62, d);
+    const below = r.top + r.height / 2 > vh / 2 ? 1 : -1;
+    p.style.opacity = vis.toFixed(3);
+    p.style.pointerEvents = vis < .15 ? 'none' : '';
+    if (reduce) { p.style.translate = ''; p.style.filter = ''; return; }
+    p.style.translate = `0 ${((1 - vis) * 60 * below).toFixed(1)}px`;
+    p.style.filter = vis < .98 ? `blur(${((1 - vis) * 12).toFixed(1)}px)` : '';
+  });
+}
+
 function onScroll() {
   const t = computeT();
   universe?.setProgress(t);
   root.style.setProperty('--p', (scrollY / maxScroll).toFixed(4));
+  updatePanels();
 
   const idx = clamp(Math.round(t), 0, Math.max(0, sectors.length - 1));
   if (idx !== activeIdx && sectors.length) {
@@ -391,84 +579,120 @@ addEventListener('scroll', () => {
 addEventListener('resize', () => { measure(); onScroll(); });
 addEventListener('load', () => { measure(); onScroll(); });
 
-/* ---------------- Boot: projects → worlds → universe ---------------- */
-const worldsList = document.getElementById('worlds-list');
-const projectsReady = fetch('projects.json', { cache: 'no-cache' })
-  .then((r) => { if (!r.ok) throw new Error(r.status); return r.json(); })
-  .then(({ projects = [] }) => projects.filter((p) => p && p.name))
-  .catch(() => null);
-
-const booted = projectsReady.then((projects) => {
-  const list = projects || [];
-  if (projects === null || !list.length) {
-    worldsList.append(el('section', { class: 'world' },
-      el('article', { class: 'world-panel world-error reveal' },
-        el('p', { class: 'world-tagline', text: projects === null ? "Couldn't load the project list." : 'Projects are on the way.' }),
-        el('p', { class: 'world-copy' }, document.createTextNode('See every project on '),
-          el('a', { href: `https://github.com/${ORG}`, text: 'GitHub' }), document.createTextNode('.')))));
-  }
-  const built = list.map(world);
-  worldsList.append(...built.map((b) => b.section));
-
-  const count = document.getElementById('stat-count');
-  if (count) count.dataset.count = String(list.length);
-
-  initSphere(document.getElementById('sphere'), buildSphereTags(list));
-  observeReveals(document);
-  bindPointerFX(document);
-  collectKeyframes();
-  measure();
-  onScroll();
-
-  const known = new Set(list.flatMap((p) => [p.id, p.repo && p.repo.split('/')[1]]).filter(Boolean).map((s) => s.toLowerCase()));
-  discover(known);
-
-  const worlds = list.map((p, i) => ({ accent: built[i].accent, planet: p.planet }));
-  return import('./scene.js')
-    .then(({ createUniverse }) => {
-      universe = createUniverse(document.getElementById('universe'), { mobile: innerWidth < 760, reduce, worlds });
-      requestAnimationFrame(() => root.classList.add('scene-ready'));
-      measure();
-      onScroll();
-    })
-    .catch((err) => {
-      console.warn('3D scene unavailable, using static background.', err);
-      root.classList.add('no-webgl');
-    });
-});
-
-/* ---------------- Loader ---------------- */
+/* ---------------- Loader: real stages ---------------- */
+const STAGES = [
+  { key: 'data', label: 'Fetching projects', w: .15 },
+  { key: 'fonts', label: 'Loading typefaces', w: .15 },
+  { key: 'engine', label: 'Loading 3D engine', w: .42 },
+  { key: 'scene', label: 'Compiling shaders', w: .28 },
+];
+const done = new Set();
+const markDone = (key) => done.add(key);
 const pctEl = document.querySelector('[data-pct]');
+const stageEl = document.querySelector('[data-stage]');
+const barEl = document.querySelector('[data-bar]');
 let pct = 0;
-let ready = false;
-const start = performance.now();
-Promise.all([booted, document.fonts ? document.fonts.ready : Promise.resolve()]).then(() => { ready = true; });
-setTimeout(() => { ready = true; }, 3500);
+let stageStart = performance.now();
+let lastStage = '';
+let forceReady = false;
+setTimeout(() => { forceReady = true; }, 7000);
 
 function loaderTick(now) {
-  const goal = ready ? 100 : Math.min(88, (now - start) / 14);
-  pct += (goal - pct) * (ready ? .18 : .08);
+  const current = STAGES.find((s) => !done.has(s.key));
+  if (current && current.key !== lastStage) { lastStage = current.key; stageStart = now; }
+  let goal = STAGES.reduce((a, s) => a + (done.has(s.key) ? s.w : 0), 0);
+  if (current) goal += current.w * Math.min(.85, (now - stageStart) / 2500); // creep within the running stage
+  const ready = !current || forceReady;
+  if (ready) goal = 1;
+  pct += (goal * 100 - pct) * (ready ? .2 : .1);
   if (pctEl) pctEl.textContent = String(Math.round(pct)).padStart(3, '0');
+  if (barEl) barEl.style.setProperty('--lp', (pct / 100).toFixed(3));
+  if (stageEl) stageEl.textContent = ready ? 'Igniting core' : current.label;
   if (ready && pct > 99.3) { onLoaded(); return; }
   requestAnimationFrame(loaderTick);
 }
 requestAnimationFrame(loaderTick);
+(document.fonts ? document.fonts.ready : Promise.resolve()).then(() => markDone('fonts'));
 
+/* ---------------- Boot: projects → worlds → universe ---------------- */
+const worldsList = document.getElementById('worlds-list');
+const nextFrame = () => new Promise((r) => requestAnimationFrame(() => setTimeout(r, 0)));
+
+const booted = fetch('projects.json', { cache: 'no-cache' })
+  .then((r) => { if (!r.ok) throw new Error(r.status); return r.json(); })
+  .then(({ projects = [] }) => projects.filter((p) => p && p.name))
+  .catch(() => null)
+  .then(async (projects) => {
+    markDone('data');
+    const list = projects || [];
+    if (projects === null || !list.length) {
+      worldsList.append(el('section', { class: 'world' },
+        el('article', { class: 'world-panel world-error' },
+          el('p', { class: 'world-tagline', text: projects === null ? "Couldn't load the project list." : 'Projects are on the way.' }),
+          el('p', { class: 'world-copy' }, document.createTextNode('See every project on '),
+            el('a', { href: `https://github.com/${ORG}`, text: 'GitHub' }), document.createTextNode('.')))));
+    }
+    const built = list.map(world);
+    worldsList.append(...built.map((b) => b.section));
+    panels = [...worldsList.querySelectorAll('.world-panel')];
+
+    const count = document.getElementById('stat-count');
+    if (count) count.dataset.count = String(list.length);
+
+    initConstellation(document.getElementById('sphere'), buildGraph(list, built.map((b) => b.accent)), built.map((b) => b.section));
+    observeReveals(document);
+    bindPointerFX(document);
+    collectKeyframes();
+    measure();
+    onScroll();
+
+    const known = new Set(list.flatMap((p) => [p.id, p.repo && p.repo.split('/')[1]]).filter(Boolean).map((s) => s.toLowerCase()));
+    discover(known);
+
+    const worlds = list.map((p, i) => ({ accent: built[i].accent, planet: p.planet }));
+    try {
+      const { createUniverse } = await import('./scene.js');
+      markDone('engine');
+      await nextFrame(); // let the loader show "Compiling shaders" before the GPU work blocks
+      universe = createUniverse(document.getElementById('universe'), { mobile: innerWidth < 760, reduce, worlds, tier });
+      measure();
+      onScroll();
+    } catch (err) {
+      console.warn('3D scene unavailable, using static background.', err);
+      root.classList.add('no-webgl');
+      markDone('engine');
+    }
+    markDone('scene');
+  });
+
+/* ---------------- Cinematic entrance ---------------- */
 let loadedOnce = false;
 function onLoaded() {
   if (loadedOnce) return;
   loadedOnce = true;
   if (pctEl) pctEl.textContent = '100';
   root.classList.add('loaded');
-  document.querySelectorAll('.hero .reveal').forEach((n) => n.classList.add('in'));
-  booted.then(countUp);
+
+  let seen = false;
+  try { seen = sessionStorage.getItem('kr-intro') === '1'; sessionStorage.setItem('kr-intro', '1'); } catch { /* storage blocked */ }
+  const dur = universe ? universe.intro(seen) : 0;
+  requestAnimationFrame(() => root.classList.add('scene-ready'));
+
+  const heroAt = reduce || !dur ? 0 : dur * 520; // headline rises just after the core ignites
+  const doneAt = reduce || !dur ? 0 : dur * 880;
+  setTimeout(() => {
+    root.classList.add('hero-in');
+    document.querySelectorAll('.hero .reveal').forEach((n) => n.classList.add('in'));
+    booted.then(countUp);
+  }, heroAt);
+  setTimeout(() => root.classList.add('intro-done'), doneAt);
 }
 
 function countUp() {
   document.querySelectorAll('[data-count]').forEach((n) => {
     const to = Number(n.dataset.count);
     if (reduce) { n.textContent = to; return; }
-    const t0 = performance.now() + 400;
+    const t0 = performance.now() + 300;
     const step = (now) => {
       const p = clamp((now - t0) / 1400, 0, 1);
       n.textContent = Math.round(to * (1 - Math.pow(1 - p, 4)));
@@ -493,18 +717,21 @@ addEventListener('pointermove', (e) => {
   ptr.x = e.clientX; ptr.y = e.clientY;
   universe?.setPointer((e.clientX / innerWidth) * 2 - 1, -((e.clientY / innerHeight) * 2 - 1));
 }, { passive: true });
-if (fine && !reduce && glowEl) {
+if (fine && glowEl) {
   const follow = () => {
-    ptr.gx += (ptr.x - ptr.gx) * .12;
-    ptr.gy += (ptr.y - ptr.gy) * .12;
-    glowEl.style.setProperty('--cx', `${ptr.gx}px`);
-    glowEl.style.setProperty('--cy', `${ptr.gy}px`);
+    if (!reduce) {
+      ptr.gx += (ptr.x - ptr.gx) * .12;
+      ptr.gy += (ptr.y - ptr.gy) * .12;
+      glowEl.style.setProperty('--cx', `${ptr.gx}px`);
+      glowEl.style.setProperty('--cy', `${ptr.gy}px`);
+    }
     requestAnimationFrame(follow);
   };
   requestAnimationFrame(follow);
 }
 
 addEventListener('pointerdown', (e) => {
+  if (e.target.closest('.sphere')) return; // dragging the constellation shouldn't spark
   universe?.pulse(.8);
   if (reduce) return;
   const n = e.pointerType === 'touch' ? 8 : 12;

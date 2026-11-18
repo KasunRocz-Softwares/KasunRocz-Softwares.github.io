@@ -59,7 +59,11 @@ shows up under "Also from the workshop", using the repo's description.
 | `favicon.svg` | Org logo / tab icon |
 | `.nojekyll` | Tells GitHub Pages to serve files as-is |
 
-If WebGL isn't available, the page still works with a plain gradient background. Visitors who turn on "reduce motion" get calmer animation.
+If WebGL isn't available, the page still works with a plain gradient background.
+
+- **Quality tiers:** `js/app.js` picks `high`, `medium` or `low` from the device (screen, memory, CPU cores, Data Saver). Lower tiers draw fewer particles and pixels; resolution also drops automatically if the first seconds run slow.
+- **Motion:** the nav's Motion switch turns animation down or back up and is remembered per visitor. It starts from the system's "reduce motion" setting.
+- **Intro:** the full cinematic entrance plays once per browser session; later page loads play a shorter version.
 
 ## Run locally
 
