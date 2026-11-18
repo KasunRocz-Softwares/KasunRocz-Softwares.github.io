@@ -104,6 +104,20 @@ const RING_F = /* glsl */`
     gl_FragColor = vec4(uColor, a);
   }`;
 
+// Radar disc: a rotating sweep with a fading trail over faint range rings.
+const RADAR_F = /* glsl */`
+  uniform vec3 uColor; uniform float uTime; uniform float uIn; uniform float uOut;
+  varying vec2 vP;
+  void main(){
+    float r = length(vP);
+    float a = atan(vP.y, vP.x);
+    float sweep = mod(a - uTime * 1.2, 6.28318) / 6.28318;
+    float trail = pow(1. - sweep, 5.);
+    float rings = smoothstep(.03, 0., abs(fract(r * 1.6) - .5) - .46);
+    float edge = smoothstep(uOut, uOut - .3, r) * smoothstep(uIn, uIn + .3, r);
+    gl_FragColor = vec4(uColor, (trail * .5 + rings * .14) * edge);
+  }`;
+
 const LANE_V = /* glsl */`
   attribute float aT; varying float vT;
   void main(){ vT = aT; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.); }`;
@@ -411,7 +425,58 @@ export function createUniverse(canvas, { mobile = false, reduce = false, worlds 
     };
   }
 
-  const BUILDERS = { ring: ringPlanet, waves: wavePlanet, crystal: crystalPlanet };
+  // Monitoring: a watched globe, a radar sweep, server blips and orbiting satellites.
+  function radarPlanet(color) {
+    const g = new THREE.Group();
+    g.add(new THREE.Mesh(new THREE.IcosahedronGeometry(1.4, Math.round(Q.detail * .6)), orbMat(color, deepOf(color), .03)));
+    g.add(glow(color, 8, .4));
+    const shell = new THREE.Mesh(new THREE.SphereGeometry(1.8, 18, 12), new THREE.MeshBasicMaterial({ color, wireframe: true, transparent: true, opacity: .12, blending: THREE.AdditiveBlending, depthWrite: false }));
+    g.add(shell);
+    const disc = new THREE.Mesh(
+      new THREE.RingGeometry(2.2, 4.8, 128, 1),
+      new THREE.ShaderMaterial({
+        uniforms: { uColor: { value: new THREE.Color(color) }, uTime: shared.uTime, uIn: { value: 2.2 }, uOut: { value: 4.8 } },
+        vertexShader: RING_V, fragmentShader: RADAR_F, transparent: true, side: THREE.DoubleSide, depthWrite: false, blending: THREE.AdditiveBlending,
+      }),
+    );
+    disc.rotation.set(-1.25, 0, .2);
+    g.add(disc);
+    const status = [new THREE.Color(0x3cf2c8), new THREE.Color(0xffb547), new THREE.Color(color)];
+    const blipPivot = new THREE.Group();
+    blipPivot.rotation.set(-1.25 + Math.PI / 2, 0, .2);
+    blipPivot.add(envPoints(420, (i, o) => {
+      const a = Math.random() * Math.PI * 2, r = 2.5 + Math.random() * 2.2;
+      o.x = Math.cos(a) * r; o.z = Math.sin(a) * r; o.y = (Math.random() - .5) * .12;
+      const k = Math.random();
+      o.color.copy(status[k < .7 ? 0 : k < .9 ? 1 : 2]);
+      o.size = .5 + Math.pow(Math.random(), 3) * 1.8;
+    }, { spin: .02 }));
+    g.add(blipPivot);
+    const sats = [0x3cf2c8, 0x3cf2c8, 0xffb547, color].map((c, i) => {
+      const pivot = new THREE.Group();
+      pivot.rotation.set(.3 + i * .5, i * 1.3, -.2 + i * .25);
+      const m = new THREE.Mesh(new THREE.BoxGeometry(.16, .16, .16), new THREE.MeshBasicMaterial({ color: c }));
+      const gl = glow(c, .9, .8);
+      m.position.x = gl.position.x = 3 + i * .45;
+      pivot.add(m, gl);
+      g.add(pivot);
+      return { pivot, m, gl, speed: .5 - i * .08, alarm: c === color };
+    });
+    g.add(nebula(color));
+    return {
+      group: g,
+      update(e) {
+        shell.rotation.y = e * .12;
+        sats.forEach((s, i) => {
+          s.pivot.rotation.y = i * 1.3 + e * s.speed;
+          s.m.rotation.set(e, e * .7, 0);
+          if (s.alarm) s.gl.material.opacity = .45 + .45 * Math.sin(e * 6);
+        });
+      },
+    };
+  }
+
+  const BUILDERS = { ring: ringPlanet, waves: wavePlanet, crystal: crystalPlanet, radar: radarPlanet };
   const KINDS = Object.keys(BUILDERS);
   const worldColors = [];
   const planets = worlds.map((w, i) => {

@@ -1,5 +1,5 @@
 {
-  "_howto": "To add a project: copy one block below, change the values, commit. The homepage updates itself and adds a 3D planet for it. 'repo' is the GitHub repo used for stars and latest version (owner/name). 'accent' is the planet and panel colour. 'features' are short highlights. 'planet' picks the 3D model: ring, waves or crystal (optional).",
+  "_howto": "To add a project: copy one block below, change the values, commit. The homepage updates itself and adds a 3D planet for it. 'repo' is the GitHub repo used for stars and latest version (owner/name). 'accent' is the planet and panel colour. 'features' are short highlights. 'planet' picks the 3D model: ring, waves, crystal or radar (optional).",
   "projects": [
     {
       "id": "MyMoto",
@@ -91,6 +91,33 @@
       "category": "Security",
       "accent": "#b197fc",
       "planet": "crystal",
+      "listings": []
+    },
+    {
+      "id": "cs-tool",
+      "name": "CS Tool",
+      "tagline": "See every server. Catch every threat.",
+      "description": "Self-hosted monitoring for Ubuntu servers. A lightweight agent streams performance metrics and security events to your own backend, with live alerts, release tracking and cloud cost reports in one dashboard.",
+      "features": [
+        "Server metrics",
+        "Security events",
+        "Live alerts",
+        "Release management",
+        "Cloud cost tracking",
+        "Role-based access"
+      ],
+      "website": "https://kasunrocz-softwares.github.io/cs-tool/",
+      "repo": "KasunRocz-Softwares/cs-tool",
+      "icon": "https://kasunrocz-softwares.github.io/cs-tool/icon.svg",
+      "image": "https://kasunrocz-softwares.github.io/cs-tool/og.png",
+      "platforms": [
+        "Ubuntu",
+        "Docker",
+        "Web"
+      ],
+      "category": "Monitoring",
+      "accent": "#ff6f61",
+      "planet": "radar",
       "listings": []
     }
   ]
