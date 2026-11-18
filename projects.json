@@ -82,18 +82,23 @@
       "id": "EPV-Site",
       "name": "Enterprise Personal Vault",
       "tagline": "Your vault starts with you.",
-      "description": "A browser extension password vault: create a local encrypted vault with no account, then connect it to your organization for team sync and an admin console once its identity provider is set up.",
+      "description": "A browser password vault that encrypts every item before it syncs. Your organization sets the policy but does not hold your key. In active development.",
       "features": [
-        "Local encrypted vault",
-        "No account to start",
-        "Team sync",
-        "Admin console",
-        "Identity provider"
+        "Eight item types",
+        "Shared vaults that rekey",
+        "Two-person signed policy",
+        "Fills only when you choose",
+        "Private breach checks",
+        "Recovery code only you hold"
       ],
       "promises": [
         "Local-first"
       ],
       "website": "https://kasunrocz-softwares.github.io/EPV-Site/",
+      "download": "https://kasunrocz-softwares.github.io/EPV-Site/extension-download/",
+      "downloadLabel": "Get the extension",
+      "icon": "https://kasunrocz-softwares.github.io/EPV-Site/assets/img/favicon.svg",
+      "image": "https://kasunrocz-softwares.github.io/EPV-Site/assets/img/og.png",
       "platforms": [
         "Chrome",
         "Edge",
