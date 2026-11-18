@@ -116,6 +116,7 @@
         "Web"
       ],
       "category": "Monitoring",
+      "license": "MIT",
       "accent": "#ff6f61",
       "planet": "radar",
       "listings": []
