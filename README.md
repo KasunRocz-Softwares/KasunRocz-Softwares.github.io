@@ -1,6 +1,6 @@
 # kasunrocz-softwares.github.io
 
-Homepage for all KasunRocz Softwares projects: https://kasunrocz-softwares.github.io/
+Homepage for all KasunRocz Softwares projects: https://qulaxy.com/
 
 ## Add a new project
 
@@ -12,12 +12,12 @@ Edit **`projects.json`** only. Copy one of the blocks, change the values, and co
   "name": "My New App",
   "tagline": "One short line.",
   "description": "Two sentences about what it does.",
-  "website": "https://kasunrocz-softwares.github.io/MyNewApp/",
+  "website": "https://qulaxy.com/MyNewApp/",
   "repo": "KasunRocz-Softwares/MyNewApp",
   "download": "https://github.com/KasunRocz-Softwares/MyNewApp/releases/latest",
   "downloadLabel": "Download",
-  "icon": "https://kasunrocz-softwares.github.io/MyNewApp/icon.png",
-  "image": "https://kasunrocz-softwares.github.io/MyNewApp/og.jpg",
+  "icon": "https://qulaxy.com/MyNewApp/icon.png",
+  "image": "https://qulaxy.com/MyNewApp/og.jpg",
   "platforms": ["Windows"],
   "category": "Tools",
   "license": "MIT",

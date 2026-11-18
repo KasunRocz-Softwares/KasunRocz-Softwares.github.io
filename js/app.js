@@ -187,7 +187,7 @@ async function discover(known) {
     if (!extra.length) return;
     const list = document.getElementById('workshop-list');
     extra.forEach((r) => list.append(
-      el('a', { class: 'mini', href: r.homepage || `https://${ORG.toLowerCase()}.github.io/${r.name}/`, rel: 'noopener' },
+      el('a', { class: 'mini', href: r.homepage || `https://qulaxy.com/${r.name}/`, rel: 'noopener' },
         el('b', { text: r.name }),
         el('span', { text: r.description || 'Project site' }))));
     document.getElementById('workshop').hidden = false;

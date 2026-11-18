@@ -18,12 +18,12 @@
         "No accounts",
         "Local-first"
       ],
-      "website": "https://kasunrocz-softwares.github.io/MyMoto/",
+      "website": "https://qulaxy.com/MyMoto/",
       "repo": "KasunRoczDev/open-cfmoto",
       "download": "https://github.com/KasunRoczDev/open-cfmoto/releases/latest/download/OpenCfMoto.apk",
       "downloadLabel": "Download APK",
-      "icon": "https://kasunrocz-softwares.github.io/MyMoto/img/mark.svg",
-      "image": "https://kasunrocz-softwares.github.io/MyMoto/img/screens/28_tpms_dash_panel.png",
+      "icon": "https://qulaxy.com/MyMoto/img/mark.svg",
+      "image": "https://qulaxy.com/MyMoto/img/screens/28_tpms_dash_panel.png",
       "platforms": [
         "Android"
       ],
@@ -51,12 +51,12 @@
         "No accounts",
         "Local-first"
       ],
-      "website": "https://kasunrocz-softwares.github.io/SoundSync/",
+      "website": "https://qulaxy.com/SoundSync/",
       "repo": "KasunRocz-Softwares/SoundSync",
       "download": "https://github.com/KasunRocz-Softwares/SoundSync/releases/latest",
       "downloadLabel": "Download for Windows",
-      "icon": "https://kasunrocz-softwares.github.io/SoundSync/assets/icon.png",
-      "image": "https://kasunrocz-softwares.github.io/SoundSync/assets/og.jpg",
+      "icon": "https://qulaxy.com/SoundSync/assets/icon.png",
+      "image": "https://qulaxy.com/SoundSync/assets/og.jpg",
       "platforms": [
         "Windows"
       ],
@@ -74,7 +74,7 @@
         {
           "site": "AlternativeTo",
           "url": "https://alternativeto.net/software/syncsound/about/?utm_source=badge&utm_medium=referral",
-          "badge": "https://kasunrocz-softwares.github.io/SoundSync/assets/alternativeto-badge.svg"
+          "badge": "https://qulaxy.com/SoundSync/assets/alternativeto-badge.svg"
         }
       ]
     },
@@ -94,11 +94,11 @@
       "promises": [
         "Local-first"
       ],
-      "website": "https://kasunrocz-softwares.github.io/EPV-Site/",
-      "download": "https://kasunrocz-softwares.github.io/EPV-Site/extension-download/",
+      "website": "https://qulaxy.com/EPV-Site/",
+      "download": "https://qulaxy.com/EPV-Site/extension-download/",
       "downloadLabel": "Get the extension",
-      "icon": "https://kasunrocz-softwares.github.io/EPV-Site/assets/img/favicon.svg",
-      "image": "https://kasunrocz-softwares.github.io/EPV-Site/assets/img/og.png",
+      "icon": "https://qulaxy.com/EPV-Site/assets/img/favicon.svg",
+      "image": "https://qulaxy.com/EPV-Site/assets/img/og.png",
       "platforms": [
         "Chrome",
         "Edge",
@@ -125,10 +125,10 @@
       "promises": [
         "Self-hosted"
       ],
-      "website": "https://kasunrocz-softwares.github.io/cs-tool/",
+      "website": "https://qulaxy.com/cs-tool/",
       "repo": "KasunRocz-Softwares/cs-tool",
-      "icon": "https://kasunrocz-softwares.github.io/cs-tool/icon.svg",
-      "image": "https://kasunrocz-softwares.github.io/cs-tool/og.png",
+      "icon": "https://qulaxy.com/cs-tool/icon.svg",
+      "image": "https://qulaxy.com/cs-tool/og.png",
       "platforms": [
         "Ubuntu",
         "Docker",
@@ -156,9 +156,9 @@
       "promises": [
         "Self-hosted"
       ],
-      "website": "https://kasunrocz-softwares.github.io/QA-TestFlow-Site/",
-      "icon": "https://kasunrocz-softwares.github.io/QA-TestFlow-Site/icon.svg",
-      "image": "https://kasunrocz-softwares.github.io/QA-TestFlow-Site/og.png",
+      "website": "https://qulaxy.com/QA-TestFlow-Site/",
+      "icon": "https://qulaxy.com/QA-TestFlow-Site/icon.svg",
+      "image": "https://qulaxy.com/QA-TestFlow-Site/og.png",
       "platforms": [
         "Web"
       ],
