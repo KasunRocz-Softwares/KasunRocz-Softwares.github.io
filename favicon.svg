@@ -1,12 +1,1 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <defs>
-    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#27c1d3"/>
-      <stop offset="1" stop-color="#2fc4ab"/>
-    </linearGradient>
-  </defs>
-  <rect width="64" height="64" rx="16" fill="#111824"/>
-  <rect x="1" y="1" width="62" height="62" rx="15" fill="none" stroke="url(#g)" stroke-opacity=".5" stroke-width="2"/>
-  <path d="M19 16v32M19 33l15-17M24 28l11 20" fill="none" stroke="url(#g)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
-  <circle cx="45" cy="44" r="4" fill="#2fc4ab"/>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><title>KasunRocz Softwares</title><rect width="512" height="512" rx="120" fill="#04050a"/><path fill="#eef1fb" d="M124.9 302.6 113.8 298.8 184.4 212H227.3L120.9 335.2H84.8V168.8H124.9ZM149.4 274.9 179.2 253 230.7 335.2H185.1Z M240.4 212H281.1L288.5 256.2V335.2H248.3V253ZM347.2 210.4V244.8Q341.3 243.5 335.6 242.9Q329.9 242.3 325.1 242.3Q314.9 242.3 306.6 246.5Q298.3 250.7 293.4 259.7Q288.5 268.8 288.5 283.3L280.5 273.4Q282 260.3 285.4 248.5Q288.9 236.8 294.9 227.9Q301 218.9 310 213.8Q319 208.6 331.6 208.6Q335.4 208.6 339.4 209.1Q343.5 209.5 347.2 210.4Z"/><circle cx="398.2" cy="306.2" r="29" fill="#3cf2c8"/></svg>

@@ -58,7 +58,8 @@ shows up under "Also from the workshop", using the repo's description.
 | `js/app.js` | Reads `projects.json`, builds the project worlds, and runs the scroll, cursor and click effects |
 | `js/scene.js` | The 3D universe (Three.js, loaded from jsDelivr): stars, the studio core, one planet per project, the galaxy |
 | `projects.json` | The project list |
-| `favicon.svg` | Org logo / tab icon |
+| `favicon.svg` | Org logo (the "kr." wordmark, letters as paths) — tab icon and nav mark |
+| `apple-touch-icon.png`, `logo-512.png`, `logo-1024.png` | PNG copies of the logo: home-screen icon, social preview, GitHub avatar |
 | `.nojekyll` | Tells GitHub Pages to serve files as-is |
 
 If WebGL isn't available, the page still works with a plain gradient background.
