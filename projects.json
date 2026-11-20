@@ -1,5 +1,5 @@
 {
-  "_howto": "To add a project: copy one block below, change the values, commit. The homepage updates itself and adds a 3D planet for it. 'repo' is the GitHub repo used for stars and latest version (owner/name). 'accent' is the planet and panel colour. 'features' are short highlights. 'planet' picks the 3D model: ring, waves, crystal, radar or graph (optional). 'promises' are short commitments (like 'No accounts') linked to the project in the constellation; 'Open source' is added automatically when 'license' is set.",
+  "_howto": "To add a project: copy one block below, change the values, commit. The homepage updates itself and adds a 3D planet for it. 'repo' is the GitHub repo used for stars and latest version (owner/name). 'accent' is the planet and panel colour. 'features' are short highlights. 'planet' picks the 3D model: ring, waves, crystal, radar, graph or pages (optional); give each project its own. 'promises' are short commitments (like 'No accounts') linked to the project in the constellation; 'Open source' is added automatically when 'license' is set.",
   "projects": [
     {
       "id": "MyMoto",
@@ -193,7 +193,7 @@
       ],
       "category": "Documentation",
       "accent": "#ff7ab8",
-      "planet": "waves",
+      "planet": "pages",
       "listings": []
     }
   ]

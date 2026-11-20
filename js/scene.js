@@ -531,7 +531,80 @@ export function createUniverse(canvas, { mobile = false, reduce = false, worlds 
     };
   }
 
-  const BUILDERS = { ring: ringPlanet, waves: wavePlanet, crystal: crystalPlanet, radar: radarPlanet, graph: graphPlanet };
+  // Release documentation: page cards orbit the core like a release history; in turn the front
+  // card is published — it lights up, a stamp ripple spreads from it and a beam links it to the core.
+  function pagesPlanet(color) {
+    const g = new THREE.Group();
+    g.add(new THREE.Mesh(new THREE.IcosahedronGeometry(1.25, Math.round(Q.detail * .6)), orbMat(color, deepOf(color), .03)));
+    g.add(glow(color, 8, .4));
+    const light = lighter(color, .55);
+    const pc = document.createElement('canvas'); pc.width = 128; pc.height = 164;
+    const px = pc.getContext('2d');
+    const box = (x, y, w, h, r) => { px.beginPath(); if (px.roundRect) px.roundRect(x, y, w, h, r); else px.rect(x, y, w, h); };
+    px.fillStyle = 'rgba(255,255,255,.14)'; box(4, 4, 120, 156, 12); px.fill();
+    px.strokeStyle = 'rgba(255,255,255,.95)'; px.lineWidth = 4; box(4, 4, 120, 156, 12); px.stroke();
+    px.fillStyle = 'rgba(255,255,255,.95)'; box(16, 18, 48, 14, 7); px.fill();
+    px.fillStyle = 'rgba(255,255,255,.55)';
+    [46, 62, 78, 94, 110].forEach((y, i) => { box(16, y, i % 2 ? 66 : 96, 7, 3.5); px.fill(); });
+    px.fillStyle = 'rgba(255,255,255,.9)'; px.beginPath(); px.arc(102, 138, 10, 0, Math.PI * 2); px.fill();
+    const pageTex = new THREE.CanvasTexture(pc);
+    const add = (c, opacity, extra = {}) => new THREE.MeshBasicMaterial({ color: c, transparent: true, opacity, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide, ...extra });
+    const N = 9, R = 3.2;
+    const orbit = new THREE.Group();
+    orbit.rotation.set(.34, 0, -.14);
+    g.add(orbit);
+    orbit.add(new THREE.Line(circle(R), lineMat(color, .22)));
+    const cardGeo = new THREE.PlaneGeometry(.95, 1.22);
+    const cards = Array.from({ length: N }, (_, i) => {
+      const a = i / N * Math.PI * 2;
+      const m = new THREE.Mesh(cardGeo, add(color, .5, { map: pageTex }));
+      m.position.set(Math.cos(a) * R, 0, Math.sin(a) * R);
+      m.rotation.y = Math.PI / 2 - a;
+      orbit.add(m);
+      return m;
+    });
+    const ripple = new THREE.Mesh(new THREE.RingGeometry(.9, 1, 64), add(light, 0));
+    const stamp = glow(light, 1.6, 0);
+    const beamGeo = new THREE.BufferGeometry().setFromPoints([V(0, 0, 0), V(0, 0, 0)]);
+    const beam = new THREE.Line(beamGeo, lineMat(light, 0));
+    orbit.add(beam);
+    const dustPivot = new THREE.Group();
+    dustPivot.rotation.set(.34, 0, -.14);
+    dustPivot.add(envPoints(600, (i, o) => {
+      const a = Math.random() * Math.PI * 2, r = 4.4 + Math.random() * 1.8;
+      o.x = Math.cos(a) * r; o.z = Math.sin(a) * r; o.y = (Math.random() - .5) * .25;
+      o.color.copy(Math.random() < .7 ? new THREE.Color(color) : light);
+      o.size = .4 + Math.pow(Math.random(), 3) * 1.4;
+    }, { spin: .03 }));
+    g.add(dustPivot);
+    g.add(nebula(color));
+    const P = 2.6, wp = V(0, 0, 0), cp = V(0, 0, 0);
+    let cycle = -1, lit = cards[0];
+    return {
+      group: g,
+      update(e) {
+        orbit.rotation.y = e * .16;
+        const k = Math.floor(e / P), ph = (e % P) / P;
+        if (k !== cycle) {
+          cycle = k;
+          let best = Infinity;
+          camera.getWorldPosition(cp);
+          cards.forEach((m) => { const d = m.getWorldPosition(wp).distanceToSquared(cp); if (d < best) { best = d; lit = m; } });
+          lit.add(ripple, stamp);
+          beamGeo.attributes.position.setXYZ(1, lit.position.x, lit.position.y, lit.position.z);
+          beamGeo.attributes.position.needsUpdate = true;
+        }
+        const pulse = ph < .12 ? ph / .12 : Math.pow(1 - (ph - .12) / .88, 2);
+        cards.forEach((m) => { const on = m === lit ? pulse : 0; m.material.opacity = .42 + on * .55; m.scale.setScalar(1 + on * .16); });
+        ripple.scale.setScalar(.5 + ph * 1.05);
+        ripple.material.opacity = (1 - ph) * .7;
+        stamp.material.opacity = pulse * .9;
+        beam.material.opacity = pulse * .6;
+      },
+    };
+  }
+
+  const BUILDERS = { ring: ringPlanet, waves: wavePlanet, crystal: crystalPlanet, radar: radarPlanet, graph: graphPlanet, pages: pagesPlanet };
   const KINDS = Object.keys(BUILDERS);
   const worldColors = [];
   const planets = worlds.map((w, i) => {
