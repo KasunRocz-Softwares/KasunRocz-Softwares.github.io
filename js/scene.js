@@ -531,11 +531,12 @@ export function createUniverse(canvas, { mobile = false, reduce = false, worlds 
     };
   }
 
-  // Release documentation: page cards orbit the core like a release history; in turn the front
+  // Release documentation: page cards orbit the core like a release history; in turn the front-left
   // card is published — it lights up, a stamp ripple spreads from it and a beam links it to the core.
+  // Matches the hero on the DocPulse site (kr-hero.js, kind "pages").
   function pagesPlanet(color) {
     const g = new THREE.Group();
-    g.add(new THREE.Mesh(new THREE.IcosahedronGeometry(1.25, Math.round(Q.detail * .6)), orbMat(color, deepOf(color), .03)));
+    g.add(new THREE.Mesh(new THREE.IcosahedronGeometry(1.3, Math.round(Q.detail * .6)), orbMat(color, deepOf(color), .03)));
     g.add(glow(color, 8, .4));
     const light = lighter(color, .55);
     const pc = document.createElement('canvas'); pc.width = 128; pc.height = 164;
@@ -549,7 +550,7 @@ export function createUniverse(canvas, { mobile = false, reduce = false, worlds 
     px.fillStyle = 'rgba(255,255,255,.9)'; px.beginPath(); px.arc(102, 138, 10, 0, Math.PI * 2); px.fill();
     const pageTex = new THREE.CanvasTexture(pc);
     const add = (c, opacity, extra = {}) => new THREE.MeshBasicMaterial({ color: c, transparent: true, opacity, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide, ...extra });
-    const N = 9, R = 3.2;
+    const N = 9, R = 3.3;
     const orbit = new THREE.Group();
     orbit.rotation.set(.34, 0, -.14);
     g.add(orbit);
@@ -571,7 +572,7 @@ export function createUniverse(canvas, { mobile = false, reduce = false, worlds 
     const dustPivot = new THREE.Group();
     dustPivot.rotation.set(.34, 0, -.14);
     dustPivot.add(envPoints(600, (i, o) => {
-      const a = Math.random() * Math.PI * 2, r = 4.4 + Math.random() * 1.8;
+      const a = Math.random() * Math.PI * 2, r = 4.7 + Math.random() * 1.6;
       o.x = Math.cos(a) * r; o.z = Math.sin(a) * r; o.y = (Math.random() - .5) * .25;
       o.color.copy(Math.random() < .7 ? new THREE.Color(color) : light);
       o.size = .4 + Math.pow(Math.random(), 3) * 1.4;
@@ -587,9 +588,13 @@ export function createUniverse(canvas, { mobile = false, reduce = false, worlds 
         const k = Math.floor(e / P), ph = (e % P) / P;
         if (k !== cycle) {
           cycle = k;
-          let best = Infinity;
-          camera.getWorldPosition(cp);
-          cards.forEach((m) => { const d = m.getWorldPosition(wp).distanceToSquared(cp); if (d < best) { best = d; lit = m; } });
+          let best = -Infinity;
+          orbit.getWorldPosition(cp).applyMatrix4(camera.matrixWorldInverse);
+          cards.forEach((m) => {
+            m.getWorldPosition(wp).applyMatrix4(camera.matrixWorldInverse);
+            const score = (wp.z - cp.z) - (wp.x - cp.x) * 1.4;
+            if (score > best) { best = score; lit = m; }
+          });
           lit.add(ripple, stamp);
           beamGeo.attributes.position.setXYZ(1, lit.position.x, lit.position.y, lit.position.z);
           beamGeo.attributes.position.needsUpdate = true;
