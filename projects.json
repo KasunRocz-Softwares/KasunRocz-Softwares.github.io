@@ -166,6 +166,35 @@
       "accent": "#7ef29d",
       "planet": "graph",
       "listings": []
+    },
+    {
+      "id": "DocPulse-Site",
+      "name": "DocPulse",
+      "tagline": "Every release note, approved before it's public.",
+      "description": "Release documentation and publishing. Keep the full internal record of every release, and publish only the customer-facing notes a second person approved, on a release page you design for each product.",
+      "features": [
+        "Two-person approval",
+        "Per-product release pages",
+        "Page designer",
+        "GitHub import",
+        "RSS and email updates",
+        "Users and roles"
+      ],
+      "promises": [
+        "Self-hosted"
+      ],
+      "website": "https://qulaxy.com/DocPulse-Site/",
+      "repo": "KasunRocz-Softwares/DocPulse",
+      "icon": "https://qulaxy.com/DocPulse-Site/icon.svg",
+      "image": "https://qulaxy.com/DocPulse-Site/og.png",
+      "platforms": [
+        "Web",
+        "Docker"
+      ],
+      "category": "Documentation",
+      "accent": "#ff7ab8",
+      "planet": "waves",
+      "listings": []
     }
   ]
 }
