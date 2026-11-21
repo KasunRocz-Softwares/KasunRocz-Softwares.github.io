@@ -609,7 +609,74 @@ export function createUniverse(canvas, { mobile = false, reduce = false, worlds 
     };
   }
 
-  const BUILDERS = { ring: ringPlanet, waves: wavePlanet, crystal: crystalPlanet, radar: radarPlanet, graph: graphPlanet, pages: pagesPlanet };
+  // Diagnostics: a lens over a data world. A scan sweeps the glass while a ring of bars (storage and
+  // load) rises and falls around it. Matches the hero on the Qulaxy Lens site (kr-hero.js, kind "lens").
+  function lensPlanet(color) {
+    const g = new THREE.Group();
+    g.add(new THREE.Mesh(new THREE.IcosahedronGeometry(1.25, Math.round(Q.detail * .6)), orbMat(color, deepOf(color), .04)));
+    g.add(glow(color, 8, .4));
+    const light = lighter(color, .55);
+    const add = (c, opacity) => new THREE.MeshBasicMaterial({ color: c, transparent: true, opacity, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide });
+    const lens = new THREE.Group();
+    lens.rotation.set(.18, -.5, .08);
+    lens.position.z = .4;
+    g.add(lens);
+    lens.add(new THREE.Mesh(new THREE.TorusGeometry(2.5, .055, 12, 160), add(light, .85)));
+    lens.add(new THREE.Mesh(new THREE.TorusGeometry(2.62, .015, 8, 160), add(color, .5)));
+    const uTime = { value: 0 };
+    lens.add(new THREE.Mesh(new THREE.CircleGeometry(2.48, 96), new THREE.ShaderMaterial({
+      uniforms: { uTime, uColor: { value: new THREE.Color(color) } },
+      vertexShader: 'varying vec2 vP; void main(){ vP = position.xy; gl_Position = projectionMatrix*modelViewMatrix*vec4(position,1.); }',
+      fragmentShader: `uniform vec3 uColor; uniform float uTime; varying vec2 vP;
+        void main(){ float r = length(vP) / 2.48;
+          float edge = smoothstep(.55, 1., r);
+          float sweep = mod(atan(vP.y, vP.x) - uTime * .9, 6.2831853);
+          float trail = exp(-sweep * 2.2);
+          float grid = smoothstep(.04, 0., abs(fract(vP.x * 1.6) - .5) - .47) + smoothstep(.04, 0., abs(fract(vP.y * 1.6) - .5) - .47);
+          gl_FragColor = vec4(uColor, edge * .16 + trail * .22 * (1. - r * .4) + grid * .035); }`,
+      transparent: true, side: THREE.DoubleSide, depthWrite: false, blending: THREE.AdditiveBlending,
+    })));
+    const glint = glow(light, 1.4, .8);
+    glint.position.set(-1.6, 1.7, .05);
+    lens.add(glint);
+    const BARS = 56, R = 3.55;
+    const bars = new THREE.InstancedMesh(new THREE.BoxGeometry(.07, 1, .07), add(color, .5), BARS);
+    const barPivot = new THREE.Group();
+    barPivot.rotation.set(.32, 0, -.12);
+    barPivot.add(bars);
+    g.add(barPivot);
+    const dustPivot = new THREE.Group();
+    dustPivot.rotation.set(.32, 0, -.12);
+    dustPivot.add(envPoints(600, (i, o) => {
+      const a = Math.random() * Math.PI * 2, r = 4.4 + Math.random() * 2;
+      o.x = Math.cos(a) * r; o.z = Math.sin(a) * r; o.y = (Math.random() - .5) * .25;
+      o.color.copy(Math.random() < .7 ? new THREE.Color(color) : light);
+      o.size = .4 + Math.pow(Math.random(), 3) * 1.4;
+    }, { spin: .03 }));
+    g.add(dustPivot);
+    g.add(nebula(color));
+    return {
+      group: g,
+      update(e) {
+        uTime.value = e;
+        lens.rotation.y = -.5 + Math.sin(e * .25) * .18;
+        lens.rotation.x = .18 + Math.sin(e * .31) * .06;
+        barPivot.rotation.y = e * .12;
+        for (let i = 0; i < BARS; i++) {
+          const a = i / BARS * Math.PI * 2;
+          const h = .25 + .9 * Math.pow(.5 + .5 * Math.sin(e * 1.3 + i * .55) * Math.sin(e * .7 + i * .21), 2);
+          dummy.position.set(Math.cos(a) * R, h / 2 - .2, Math.sin(a) * R);
+          dummy.scale.set(1, h, 1);
+          dummy.rotation.set(0, -a, 0);
+          dummy.updateMatrix();
+          bars.setMatrixAt(i, dummy.matrix);
+        }
+        bars.instanceMatrix.needsUpdate = true;
+      },
+    };
+  }
+
+  const BUILDERS = { ring: ringPlanet, waves: wavePlanet, crystal: crystalPlanet, radar: radarPlanet, graph: graphPlanet, pages: pagesPlanet, lens: lensPlanet };
   const KINDS = Object.keys(BUILDERS);
   const worldColors = [];
   const planets = worlds.map((w, i) => {

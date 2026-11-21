@@ -1,5 +1,5 @@
 {
-  "_howto": "To add a project: copy one block below, change the values, commit. The homepage updates itself and adds a 3D planet for it. 'repo' is the GitHub repo used for stars and latest version (owner/name). 'accent' is the planet and panel colour. 'features' are short highlights. 'planet' picks the 3D model: ring, waves, crystal, radar, graph or pages (optional); give each project its own. 'promises' are short commitments (like 'No accounts') linked to the project in the constellation; 'Open source' is added automatically when 'license' is set.",
+  "_howto": "To add a project: copy one block below, change the values, commit. The homepage updates itself and adds a 3D planet for it. 'repo' is the GitHub repo used for stars and latest version (owner/name). 'accent' is the planet and panel colour. 'features' are short highlights. 'planet' picks the 3D model: ring, waves, crystal, radar, graph, pages or lens (optional); give each project its own. 'promises' are short commitments (like 'No accounts') linked to the project in the constellation; 'Open source' is added automatically when 'license' is set.",
   "projects": [
     {
       "id": "MyMoto",
@@ -194,6 +194,38 @@
       "category": "Documentation",
       "accent": "#ff7ab8",
       "planet": "pages",
+      "listings": []
+    },
+    {
+      "id": "Qulaxy-Lens-Site",
+      "name": "Qulaxy Lens",
+      "tagline": "What fills your drive and slows your PC, with the evidence.",
+      "description": "Storage and performance diagnostics for Windows 11. It explains what is most likely behind a full drive or a slow or hot PC, says how sure it is and how to check, and changes nothing unless you approve it.",
+      "features": [
+        "Storage by folder",
+        "Exact duplicates",
+        "Evidence-based findings",
+        "Throttling and GPU heat",
+        "Leftover app data",
+        "Reversible quarantine"
+      ],
+      "promises": [
+        "No accounts",
+        "Local-first",
+        "Read-only by default"
+      ],
+      "website": "https://qulaxy.com/Qulaxy-Lens-Site/",
+      "repo": "KasunRocz-Softwares/Qulaxy-Lens-Releases",
+      "download": "https://github.com/KasunRocz-Softwares/Qulaxy-Lens-Releases/releases/latest",
+      "downloadLabel": "Download for Windows",
+      "icon": "https://qulaxy.com/Qulaxy-Lens-Site/icon.svg",
+      "image": "https://qulaxy.com/Qulaxy-Lens-Site/og.png",
+      "platforms": [
+        "Windows"
+      ],
+      "category": "Diagnostics",
+      "accent": "#4fd1bf",
+      "planet": "lens",
       "listings": []
     }
   ]
