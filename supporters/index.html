@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Supporters — KasunRocz Softwares</title>
+  <meta name="description" content="The companies and people who sponsor KasunRocz Softwares and keep its apps free, open source and ad-free.">
+  <meta name="theme-color" content="#04050a">
+  <meta property="og:title" content="Supporters — KasunRocz Softwares">
+  <meta property="og:description" content="The sponsors who keep these apps free, open source and ad-free.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://qulaxy.com/supporters/">
+  <meta property="og:image" content="https://qulaxy.com/logo-512.png">
+  <meta name="twitter:card" content="summary">
+  <link rel="canonical" href="https://qulaxy.com/supporters/">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;500;600&family=Manrope:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+  <style>
+    .sp { max-width: var(--max); margin: 0 auto; padding: 150px var(--gutter) 96px; }
+    .sp-hero { max-width: 760px; }
+    .sp-hero .display { font-size: clamp(36px, 5.4vw, 72px); }
+    .sp-lead { margin-top: 22px; font-size: 18px; color: var(--ink-2); max-width: 620px; }
+    .sp-section { margin-top: 88px; }
+    .sp-section .h2 { font-size: clamp(26px, 3.2vw, 40px); }
+    .sp-note { margin-top: 10px; color: var(--ink-3); max-width: 620px; }
+
+    .sp-list { display: grid; gap: 12px; margin-top: 28px; }
+    .sp-list.companies { grid-template-columns: repeat(auto-fill, minmax(min(240px, 100%), 1fr)); }
+    .sp-list.champions { grid-template-columns: repeat(auto-fill, minmax(min(190px, 100%), 1fr)); }
+    .sp-item {
+      display: flex; align-items: center; gap: 14px; min-width: 0;
+      padding: 16px 18px; border-radius: var(--r-md);
+      background: rgba(255, 255, 255, .03); border: 1px solid var(--line);
+      transition: border-color .25s, background .25s;
+    }
+    a.sp-item:hover { border-color: var(--line-2); background: rgba(255, 255, 255, .06); }
+    .sp-item img { width: 44px; height: 44px; flex: none; border-radius: 12px; background: var(--bg-2); object-fit: contain; }
+    .champions .sp-item img { border-radius: 50%; }
+    .sp-item .who { min-width: 0; }
+    .sp-item .name { font-weight: 600; overflow-wrap: anywhere; }
+    .sp-item .since { font-family: var(--f-mono); font-size: 11.5px; letter-spacing: .08em; color: var(--ink-3); }
+    .companies .sp-item { padding: 22px; }
+    .companies .sp-item img { width: 56px; height: 56px; }
+    .companies .sp-item .name { font-size: 17px; }
+
+    .sp-empty {
+      margin-top: 28px; padding: 28px; border-radius: var(--r-md);
+      border: 1px dashed var(--line-2); color: var(--ink-2);
+      display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px;
+    }
+
+    .tiers { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-top: 28px; }
+    .tier {
+      display: flex; flex-direction: column; gap: 6px; padding: 22px; border-radius: var(--r-md);
+      background: rgba(255, 255, 255, .03); border: 1px solid var(--line);
+    }
+    .tier.is-listed { border-color: rgba(var(--accent-rgb), .45); }
+    .tier .price { font-family: var(--f-display); font-weight: 500; font-size: 30px; letter-spacing: -.03em; }
+    .tier .price small { font-family: var(--f-body); font-size: 14px; letter-spacing: 0; color: var(--ink-3); }
+    .tier .tname { font-weight: 700; }
+    .tier p { color: var(--ink-2); font-size: 15px; }
+    .tier .tier-tag { margin-top: auto; padding-top: 14px; font-family: var(--f-mono); font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--live); }
+    .sp-cta { margin-top: 28px; display: flex; flex-wrap: wrap; gap: 12px; }
+
+    @media (max-width: 960px) { .tiers { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    @media (max-width: 760px) {
+      .sp { padding-top: 118px; }
+      .sp-section { margin-top: 64px; }
+      .nav-end .btn-ghost { display: none; }
+    }
+    @media (max-width: 480px) { .tiers { grid-template-columns: 1fr; } }
+    @media (max-width: 340px) { .brand > span { display: none; } }
+  </style>
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+
+  <header class="nav" id="nav">
+    <a class="brand" href="/" aria-label="KasunRocz Softwares home">
+      <img class="brand-mark" src="/favicon.svg" alt="" width="28" height="28">
+      <span>KasunRocz<span class="brand-dim"> Softwares</span></span>
+    </a>
+    <div class="nav-end">
+      <a class="btn btn-ghost btn-sm" href="/">← All projects</a>
+      <a class="btn btn-primary btn-sm" href="https://github.com/sponsors/KasunRocz-Softwares" target="_blank" rel="noopener">Sponsor ♥</a>
+    </div>
+  </header>
+
+  <main id="main" class="sp">
+    <section class="sp-hero">
+      <p class="kicker">// Supporters</p>
+      <h1 class="display">The people who keep it free.</h1>
+      <p class="sp-lead">Every app here is free, open source and ad-free. Sponsors pay for the time and test hardware that keeps it that way. Thank you.</p>
+    </section>
+
+    <section class="sp-section" aria-labelledby="companies-h">
+      <h2 class="h2" id="companies-h">Company sponsors</h2>
+      <p class="sp-note">Companies sponsoring at $100 a month.</p>
+      <div class="sp-list companies" data-list="companies"></div>
+    </section>
+
+    <section class="sp-section" aria-labelledby="champions-h">
+      <h2 class="h2" id="champions-h">Champions</h2>
+      <p class="sp-note">People sponsoring at $25 a month.</p>
+      <div class="sp-list champions" data-list="champions"></div>
+    </section>
+
+    <section class="sp-section" aria-labelledby="tiers-h">
+      <h2 class="h2" id="tiers-h">Become a sponsor</h2>
+      <p class="sp-note">Sponsorship runs through GitHub Sponsors. Any amount helps, and every sponsor also shows on the GitHub Sponsors page.</p>
+      <div class="tiers">
+        <div class="tier"><span class="price">$3 <small>a month</small></span><span class="tname">Supporter</span><p>Help maintain the free projects.</p></div>
+        <div class="tier"><span class="price">$10 <small>a month</small></span><span class="tname">Backer</span><p>Support ongoing fixes and releases.</p></div>
+        <div class="tier is-listed"><span class="price">$25 <small>a month</small></span><span class="tname">Champion</span><p>Recognition on this supporters page.</p><span class="tier-tag">Listed here</span></div>
+        <div class="tier is-listed"><span class="price">$100 <small>a month</small></span><span class="tname">Company Sponsor</span><p>Company recognition and sponsorship updates.</p><span class="tier-tag">Listed here</span></div>
+      </div>
+      <div class="sp-cta">
+        <a class="btn btn-primary btn-lg" href="https://github.com/sponsors/KasunRocz-Softwares" target="_blank" rel="noopener">Sponsor on GitHub <span aria-hidden="true">↗</span></a>
+        <a class="btn btn-ghost btn-lg" href="/">See the projects</a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <span>© <span data-year>2026</span> KasunRocz Softwares · Free &amp; open source · <a href="https://github.com/sponsors/KasunRocz-Softwares" target="_blank" rel="noopener">Sponsor ♥</a></span>
+    <a href="/">Back to home ↑</a>
+  </footer>
+
+  <script>
+  (function () {
+    var SPONSOR = 'https://github.com/sponsors/KasunRocz-Softwares';
+    document.querySelectorAll('[data-year]').forEach(function (n) { n.textContent = new Date().getFullYear(); });
+
+    function el(tag, cls, text) {
+      var n = document.createElement(tag);
+      if (cls) n.className = cls;
+      if (text != null) n.textContent = text;
+      return n;
+    }
+    function safeUrl(u) {
+      try { var x = new URL(u); return /^https?:$/.test(x.protocol) ? x.href : null; } catch (e) { return null; }
+    }
+    function sinceText(s) {
+      if (!s) return '';
+      var d = new Date(s + (s.length === 7 ? '-01' : ''));
+      return isNaN(d) ? '' : 'Since ' + d.toLocaleDateString('en', { month: 'short', year: 'numeric' });
+    }
+    function empty(box, label) {
+      var e = el('div', 'sp-empty');
+      e.appendChild(el('span', '', 'No ' + label + ' yet. Yours could be the first name here.'));
+      var a = el('a', 'btn btn-ghost btn-sm', 'Become one ↗');
+      a.href = SPONSOR; a.target = '_blank'; a.rel = 'noopener';
+      e.appendChild(a);
+      box.appendChild(e);
+    }
+    function render(kind, people) {
+      var box = document.querySelector('[data-list="' + kind + '"]');
+      if (!people || !people.length) { empty(box, kind === 'companies' ? 'company sponsors' : 'champions'); return; }
+      people.forEach(function (p) {
+        if (!p || !p.name) return;
+        var href = safeUrl(p.url) || (p.github ? 'https://github.com/' + encodeURIComponent(p.github) : null);
+        var item = el(href ? 'a' : 'div', 'sp-item');
+        if (href) { item.href = href; item.target = '_blank'; item.rel = 'noopener'; }
+        var src = safeUrl(p.logo) || (p.github ? 'https://github.com/' + encodeURIComponent(p.github) + '.png?size=112' : null);
+        if (src) {
+          var img = el('img');
+          img.src = src; img.alt = ''; img.width = 44; img.height = 44; img.loading = 'lazy';
+          item.appendChild(img);
+        }
+        var who = el('span', 'who');
+        who.appendChild(el('span', 'name', p.name));
+        var since = sinceText(p.since);
+        if (since) { who.appendChild(document.createElement('br')); who.appendChild(el('span', 'since', since)); }
+        item.appendChild(who);
+        box.appendChild(item);
+      });
+      if (!box.children.length) empty(box, kind === 'companies' ? 'company sponsors' : 'champions');
+    }
+
+    fetch('/supporters.json', { cache: 'no-cache' })
+      .then(function (r) { return r.ok ? r.json() : {}; })
+      .catch(function () { return {}; })
+      .then(function (data) {
+        render('companies', data.companies);
+        render('champions', data.champions);
+      });
+  })();
+  </script>
+  <noscript><p class="noscript">This page needs JavaScript to list supporters. <a href="https://github.com/sponsors/KasunRocz-Softwares">See all sponsors on GitHub</a>.</p></noscript>
+
+  <!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "d643285744554e93a90cdbb2d4b0c597"}'></script><!-- End Cloudflare Web Analytics -->
+  <!-- GoatCounter (https://qulaxy.goatcounter.com): no cookies, no personal data. Counts visits on the live site only. -->
+  <script>
+  (function () {
+    if (!/(\.github\.io|^qulaxy\.com)$/.test(location.hostname)) return;
+    // Record the page path only, so ?ref=... links don't show up as separate pages.
+    window.goatcounter = { path: function () { return location.pathname; } };
+    var s = document.createElement('script');
+    s.async = true;
+    s.src = 'https://gc.zgo.at/count.js';
+    s.setAttribute('data-goatcounter', 'https://qulaxy.goatcounter.com/count');
+    document.body.appendChild(s);
+  })();
+  </script>
+</body>
+</html>

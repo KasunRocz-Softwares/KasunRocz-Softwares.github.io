@@ -49,6 +49,27 @@ The latest release version and star count come from GitHub automatically, using 
 If you forget to add a project here, any public repo in the org that has GitHub Pages turned on still
 shows up under "Also from the workshop", using the repo's description.
 
+## Add a supporter
+
+The supporters page (https://qulaxy.com/supporters/) lists **Champion** ($25/mo) and **Company Sponsor** ($100/mo)
+sponsors, as promised by those GitHub Sponsors tiers. When someone sponsors at one of those tiers, add them to
+**`supporters.json`** and commit:
+
+```json
+{
+  "companies": [
+    { "name": "Acme Ltd", "url": "https://acme.example", "logo": "https://acme.example/logo.png", "since": "2026-12" }
+  ],
+  "champions": [
+    { "name": "Jane Doe", "github": "janedoe", "since": "2026-12" }
+  ]
+}
+```
+
+Only `name` is required. `github` links to their profile and uses their GitHub avatar; `url` and `logo`
+override those. `since` is `YYYY-MM` or a full date. Remove people when their sponsorship ends.
+An empty list shows an invitation to sponsor instead.
+
 ## Files
 
 | File | What it is |
@@ -58,6 +79,7 @@ shows up under "Also from the workshop", using the repo's description.
 | `js/app.js` | Reads `projects.json`, builds the project worlds, and runs the scroll, cursor and click effects |
 | `js/scene.js` | The 3D universe (Three.js, loaded from jsDelivr): stars, the studio core, one planet per project, the galaxy |
 | `projects.json` | The project list |
+| `supporters/index.html`, `supporters.json` | The supporters page and its list of Champions and Company Sponsors |
 | `favicon.svg` | Org logo (the "kr." wordmark, letters as paths) — tab icon and nav mark |
 | `apple-touch-icon.png`, `logo-512.png`, `logo-1024.png` | PNG copies of the logo: home-screen icon, social preview, GitHub avatar |
 | `.nojekyll` | Tells GitHub Pages to serve files as-is |
